@@ -211,6 +211,21 @@ function excelSerialToYear(serial) {
   return d.getUTCFullYear();
 }
 
+// ── COLUMN-NAME NORMALISER ──────────────────────────────────
+// Excel multiline headers (Alt+Enter) are stored with \n; collapse to single space
+// so lookups work regardless of whitespace variant in the column name strings.
+function normCol(s) {
+  return String(s || '').replace(/[\r\n]+/g, ' ').replace(/ {2,}/g, ' ').trim();
+}
+function makeGetter(hdr, row) {
+  const map = {};
+  hdr.forEach((h, i) => { const k = normCol(h); if (k) map[k] = i; });
+  return col => {
+    const idx = map[normCol(col)];
+    return idx !== undefined ? (row[idx] ?? '') : '';
+  };
+}
+
 // ── PARSE WORKBOOK ──────────────────────────────────────────
 function parseWorkbook(wb) {
   const sheetRows = name => {
@@ -270,10 +285,7 @@ function parseWorkbook(wb) {
   for (let i = apHeader + 1; i < apRows.length; i++) {
     const r = apRows[i];
     if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
-    const g = col => {
-      const idx = apH.indexOf(col);
-      return idx >= 0 ? r[idx] : '';
-    };
+    const g = makeGetter(apH, r);
     const annPrem = parseFloat(g('Annual Premium ($)')) || parseFloat(g('Annual / Yearly Premium ($)')) || 0;
     policies.push({
       ownerID: g('Policy Owner ID'),
@@ -322,7 +334,7 @@ function parseWorkbook(wb) {
   for (let i = csH + 1; i < csRows.length; i++) {
     const r = csRows[i];
     if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
-    const g = col => { const idx = csHdr.indexOf(col); return idx >= 0 ? r[idx] : ''; };
+    const g = makeGetter(csHdr, r);
     coverages[g('Client ID')] = {
       totalMonthly: parseFloat(g('Total Monthly ($)')) || 0,
       totalAnnual: parseFloat(g('Total Annual ($)')) || 0,
@@ -370,7 +382,7 @@ function parseWorkbook(wb) {
   for (let i = msH + 1; i < msRows.length; i++) {
     const r = msRows[i];
     if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
-    const g = col => { const idx = msHdr.indexOf(col); return idx >= 0 ? r[idx] : ''; };
+    const g = makeGetter(msHdr, r);
     const pname = String(g('Plan Name')).trim();
     if (!pname) continue;
     maturityData.push({
@@ -403,10 +415,26 @@ function parseWorkbook(wb) {
   const pmYears = [];
   let inPolicies = false, inYears = false;
   let pmYearHeader = [];
+  // Column indices computed once when the Year header row is found
+  let pmTotalIdx = -1, pmCumIdx = -1, pmMilIdx = -1;
+  let pmSelfIdx = -1, pmJointIdx = -1, pmCapIdx = -1, pmHeadIdx = -1;
   for (const r of pmRows) {
     const k = String(r[0] || '').trim();
     if (k === '#') { inPolicies = true; continue; }
-    if (k === 'Year') { inYears = true; pmYearHeader = r; continue; }
+    if (k === 'Year') {
+      inYears = true;
+      pmYearHeader = r;
+      // Use normCol so \n-delimited headers match the lookup strings
+      const fi = name => pmYearHeader.findIndex(h => normCol(h) === normCol(name));
+      pmTotalIdx  = fi('Total Annual Premium ($)');   // actual: 'Total Annual\nPremium ($)'
+      pmCumIdx    = fi('Cumulative Paid ($)');          // actual: 'Cumulative\nPaid ($)'
+      pmMilIdx    = fi('Milestone');
+      pmSelfIdx   = fi('From Owner (Self) ($)');        // actual: 'From Owner\n(Self) ($)'
+      pmJointIdx  = fi('From Joint Account ($)');       // actual: 'From Joint\nAccount ($)'
+      pmCapIdx    = fi('Joint Capacity ($)');            // actual: 'Joint\nCapacity ($)'
+      pmHeadIdx   = fi('Joint Headroom ($)');            // actual: 'Joint\nHeadroom ($)'
+      continue;
+    }
     if (inPolicies && !inYears) {
       const n = parseInt(r[0]);
       if (!isNaN(n) && r[1] && r[1] !== 0) {
@@ -416,22 +444,15 @@ function parseWorkbook(wb) {
     if (inYears) {
       const yr = parseInt(r[0]);
       if (!isNaN(yr) && yr >= 2020 && yr <= 2130) {
-        const totalIdx = pmYearHeader.indexOf('Total Annual  Premium ($)');
-        const cumIdx = pmYearHeader.indexOf('Cumulative  Paid ($)');
-        const milIdx = pmYearHeader.indexOf('Milestone');
-        const selfIdx = pmYearHeader.indexOf('From Owner  (Self) ($)');
-        const jointIdx = pmYearHeader.indexOf('From Joint  Account ($)');
-        const capIdx = pmYearHeader.indexOf('Joint  Capacity ($)');
-        const headIdx = pmYearHeader.indexOf('Joint  Headroom ($)');
         pmYears.push({
           year: yr,
-          total: parseFloat(r[totalIdx >= 0 ? totalIdx : 6]) || 0,
-          cumulative: parseFloat(r[cumIdx >= 0 ? cumIdx : 7]) || 0,
-          milestone: String(r[milIdx >= 0 ? milIdx : 8] || '').trim(),
-          fromSelf: parseFloat(r[selfIdx >= 0 ? selfIdx : 9]) || 0,
-          fromJoint: parseFloat(r[jointIdx >= 0 ? jointIdx : 10]) || 0,
-          jointCap: parseFloat(r[capIdx >= 0 ? capIdx : 12]) || 18000,
-          jointHeadroom: parseFloat(r[headIdx >= 0 ? headIdx : 13]) || 0,
+          total:        parseFloat(r[pmTotalIdx  >= 0 ? pmTotalIdx  : 7])  || 0,
+          cumulative:   parseFloat(r[pmCumIdx    >= 0 ? pmCumIdx    : 8])  || 0,
+          milestone:    String(r[pmMilIdx    >= 0 ? pmMilIdx    : 9]  || '').trim(),
+          fromSelf:     parseFloat(r[pmSelfIdx   >= 0 ? pmSelfIdx   : 10]) || 0,
+          fromJoint:    parseFloat(r[pmJointIdx  >= 0 ? pmJointIdx  : 11]) || 0,
+          jointCap:     parseFloat(r[pmCapIdx    >= 0 ? pmCapIdx    : 13]) || 18000,
+          jointHeadroom:parseFloat(r[pmHeadIdx   >= 0 ? pmHeadIdx   : 14]) || 0,
           rowCells: r,
         });
       }
