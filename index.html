@@ -263,7 +263,7 @@ function parseWorkbook(wb) {
   const apRows = sheetRows('2_All_Policies');
   let apHeader = -1;
   for (let i = 0; i < apRows.length; i++) {
-    if (String(apRows[i][0]).includes('Policy Owner ID')) { apHeader = i; break; }
+    if (String(apRows[i][0]).trim() === 'Policy Owner ID') { apHeader = i; break; }
   }
   const apH = apHeader >= 0 ? apRows[apHeader] : [];
   const policies = [];
@@ -315,7 +315,7 @@ function parseWorkbook(wb) {
   const csRows = sheetRows('4_Coverage_Summary');
   let csH = -1;
   for (let i = 0; i < csRows.length; i++) {
-    if (String(csRows[i][0]).includes('Client ID')) { csH = i; break; }
+    if (String(csRows[i][0]).trim() === 'Client ID') { csH = i; break; }
   }
   const csHdr = csH >= 0 ? csRows[csH] : [];
   const coverages = {};
@@ -363,7 +363,7 @@ function parseWorkbook(wb) {
   const msRows = sheetRows('5_Maturity_Schedule');
   let msH = -1;
   for (let i = 0; i < msRows.length; i++) {
-    if (String(msRows[i][0]).includes('Client ID')) { msH = i; break; }
+    if (String(msRows[i][0]).trim() === 'Client ID') { msH = i; break; }
   }
   const msHdr = msH >= 0 ? msRows[msH] : [];
   const maturityData = [];
