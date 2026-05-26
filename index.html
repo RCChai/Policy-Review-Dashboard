@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Policy Dashboard Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B2A4A;--teal:#00A99D;--bg:#F0F2F5;--white:#fff;--muted:#6b7a99;--border:#e2e6ed;--red:#E53935;--green:#27AE60;--amber:#E67E22}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:#222;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.app-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.1);padding:40px;max-width:560px;width:100%}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+.logo-icon{width:44px;height:44px;background:var(--navy);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.logo-text{font-size:20px;font-weight:700;color:var(--navy)}
+.logo-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.step{margin-bottom:24px}
+.step-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.drop-zone{border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--teal);background:#f0faf9}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:32px;margin-bottom:8px}
+.drop-text{font-size:14px;color:var(--muted)}
+.drop-text b{color:var(--navy)}
+.file-chosen{display:none;align-items:center;gap:10px;padding:12px 16px;background:#f0faf9;border-radius:8px;border:1.5px solid var(--teal);margin-top:10px}
+.file-chosen.show{display:flex}
+.file-chosen-name{font-size:13px;font-weight:600;color:var(--navy)}
+.file-chosen-size{font-size:11px;color:var(--muted)}
+.pw-row{display:flex;gap:10px;align-items:flex-end}
+.pw-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;outline:none;transition:border .15s}
+.pw-input:focus{border-color:var(--teal)}
+.pw-hint{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic}
+.pw-status{font-size:12px;margin-top:8px;font-weight:600;padding:8px 12px;border-radius:6px;display:none}
+.pw-status.ok{display:block;background:#e8f8f2;color:var(--green)}
+.pw-status.fail{display:block;background:#fdecea;color:var(--red)}
+.btn{background:var(--navy);color:#fff;border:none;padding:13px 28px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;width:100%;transition:background .15s;font-family:'IBM Plex Sans',sans-serif}
+.btn:hover{background:#243a61}
+.btn:disabled{background:#bbb;cursor:not-allowed}
+.btn-teal{background:var(--teal)}
+.btn-teal:hover{background:#008f84}
+.status-bar{margin-top:16px;padding:12px 16px;border-radius:8px;font-size:13px;display:none}
+.status-bar.info{display:block;background:#e8f4fd;color:#1565C0}
+.status-bar.error{display:block;background:#fdecea;color:var(--red)}
+.status-bar.success{display:block;background:#e8f8f2;color:var(--green)}
+.progress{height:4px;background:#e2e6ed;border-radius:2px;margin-top:12px;overflow:hidden;display:none}
+.progress.show{display:block}
+.progress-fill{height:100%;background:var(--teal);border-radius:2px;transition:width .3s;width:0}
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+.footer-note{font-size:11px;color:var(--muted);text-align:center;margin-top:20px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<div class="app-card">
+  <div class="logo">
+    <div class="logo-icon">📋</div>
+    <div>
+      <div class="logo-text">Policy Dashboard Generator</div>
+      <div class="logo-sub">FSC Private · Client Review Tool</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: Upload -->
+  <div class="step">
+    <div class="step-label">Step 1 — Upload Client Excel</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".xlsx,.xlsm" onchange="handleFile(this.files[0])">
+      <div class="drop-icon">📂</div>
+      <div class="drop-text"><b>Click to upload</b> or drag & drop<br><span style="font-size:12px">NEW policy-consolidation-template v2.xlsx</span></div>
+    </div>
+    <div class="file-chosen" id="fileChosen">
+      <span style="font-size:20px">✅</span>
+      <div>
+        <div class="file-chosen-name" id="fileName">—</div>
+        <div class="file-chosen-size" id="fileSize">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: Password -->
+  <div class="step">
+    <div class="step-label">Step 2 — Enter Access Password</div>
+    <div class="pw-row">
+      <input type="password" class="pw-input" id="pwInput" placeholder="DDMMYYYY" maxlength="8" oninput="checkPw()" autocomplete="off">
+    </div>
+    <div class="pw-hint">Password = Policy owner's date of birth in DDMMYYYY format</div>
+    <div class="pw-status" id="pwStatus"></div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- GENERATE -->
+  <button class="btn btn-teal" id="generateBtn" onclick="generate()" disabled>⚡ Generate Dashboard</button>
+  <div class="status-bar" id="statusBar"></div>
+  <div class="progress" id="progress"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="footer-note">
+  All processing is done in your browser. No data is uploaded or stored anywhere.<br>
+  Strictly confidential — FSC Private use only.
+</div>
+
+<script>
+let workbook = null;
+let ownerDOB = null;
+let parsedData = null;
+
+// ── DRAG DROP ───────────────────────────────────────────────
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+
+function handleFile(file) {
+  if (!file) return;
+  document.getElementById('fileName').textContent = file.name;
+  document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
+  document.getElementById('fileChosen').classList.add('show');
+  setStatus('info', 'Reading Excel file...');
+  setProgress(20);
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      workbook = XLSX.read(e.target.result, { type: 'array', cellDates: false });
+      parsedData = parseWorkbook(workbook);
+      ownerDOB = parsedData.ownerDOB; // DDMMYYYY string
+      setProgress(60);
+      setStatus('info', `✓ Loaded: ${parsedData.ownerName} · ${parsedData.policies.length} policies · DOB read`);
+      setProgress(100);
+      document.getElementById('pwInput').focus();
+      checkPw();
+    } catch(err) {
+      setStatus('error', '⚠ Could not parse file. Check it matches the template format. ' + err.message);
+      setProgress(0);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function checkPw() {
+  const pw = document.getElementById('pwInput').value.trim();
+  const s = document.getElementById('pwStatus');
+  const btn = document.getElementById('generateBtn');
+  if (!workbook) { btn.disabled = true; return; }
+  if (!pw) { s.style.display = 'none'; btn.disabled = true; return; }
+  if (pw === ownerDOB) {
+    s.className = 'pw-status ok'; s.textContent = '✓ Access granted'; s.style.display = 'block';
+    btn.disabled = false;
+  } else {
+    s.className = 'pw-status fail'; s.textContent = '✗ Incorrect password';  s.style.display = 'block';
+    btn.disabled = true;
+  }
+}
+
+function generate() {
+  if (!parsedData) return;
+  setStatus('info', 'Generating dashboard HTML...');
+  setProgress(30);
+  try {
+    const html = buildDashboardHTML(parsedData);
+    setProgress(80);
+    // Download
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeName = parsedData.ownerName.replace(/\s+/g, '_').toUpperCase();
+    const today = new Date();
+    const dateStr = String(today.getFullYear()) + String(today.getMonth()+1).padStart(2,'0') + String(today.getDate()).padStart(2,'0');
+    a.href = url;
+    a.download = `${safeName}_Dashboard_${dateStr}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setProgress(100);
+    setStatus('success', `✓ Dashboard downloaded: ${a.download}`);
+  } catch(err) {
+    setStatus('error', '⚠ Generation failed: ' + err.message);
+    console.error(err);
+  }
+}
+
+function setStatus(type, msg) {
+  const el = document.getElementById('statusBar');
+  el.className = 'status-bar ' + type;
+  el.textContent = msg;
+}
+function setProgress(pct) {
+  const p = document.getElementById('progress');
+  p.className = 'progress show';
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+// ── EXCEL SERIAL DATE → DDMMYYYY ───────────────────────────
+function excelSerialToDDMMYYYY(serial) {
+  if (!serial || isNaN(serial)) return '';
+  const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  return String(d.getUTCDate()).padStart(2,'0') + String(d.getUTCMonth()+1).padStart(2,'0') + d.getUTCFullYear();
+}
+function excelSerialToDisplay(serial) {
+  if (!serial || isNaN(serial)) return '—';
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  return String(d.getUTCDate()).padStart(2,'0') + ' ' + months[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+}
+function excelSerialToYear(serial) {
+  if (!serial || isNaN(serial)) return '—';
+  const d = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  return d.getUTCFullYear();
+}
+
+// ── PARSE WORKBOOK ──────────────────────────────────────────
+function parseWorkbook(wb) {
+  const sheetRows = name => {
+    const sh = wb.Sheets[name];
+    if (!sh) return [];
+    return XLSX.utils.sheet_to_json(sh, { header: 1, defval: '' });
+  };
+
+  // 1_Client_Profile
+  const cpRows = sheetRows('1_Client_Profile');
+  const clients = [];
+  let headerRow = -1;
+  for (let i = 0; i < cpRows.length; i++) {
+    if (cpRows[i][0] === 'Client ID') { headerRow = i; break; }
+  }
+  const cpHeaders = headerRow >= 0 ? cpRows[headerRow] : [];
+  for (let i = headerRow + 1; i < cpRows.length; i++) {
+    const r = cpRows[i];
+    if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
+    const get = (col) => r[cpHeaders.indexOf(col)] ?? '';
+    clients.push({
+      id: get('Client ID'),
+      name: String(get('Full Name (as per NRIC)')).trim(),
+      nric: get('NRIC / FIN'),
+      dobSerial: get('Date of Birth'),
+      dob: excelSerialToDisplay(get('Date of Birth')),
+      dobPw: excelSerialToDDMMYYYY(get('Date of Birth')),
+      age: get('Age'),
+      gender: get('Gender'),
+      marital: get('Marital Status'),
+      occupation: get('Occupation'),
+      smoker: get('Smoker?'),
+      email: String(get('Email')).trim(),
+      mobile: String(get('Mobile')).replace(/\s/g,''),
+      role: get('Client Role'),
+      isChild: String(get('Is Child Client?')).toLowerCase() === 'yes',
+      linkedOwner: get('Linked Owner / Parent ID'),
+      income: parseFloat(get('Monthly Income ($)')) || 0,
+      expenses: parseFloat(get('Monthly Expenses ($)')) || 0,
+      liabilities: parseFloat(get('Liabilities / Loans ($)')) || 0,
+      jointName: get('Source Name'),
+      jointBalance: parseFloat(get('Current Balance ($)')) || 0,
+      jointTopup: parseFloat(get('Monthly Top-up ($)')) || 0,
+      notes: get('Notes'),
+    });
+  }
+  const owner = clients.find(c => !c.isChild) || clients[0];
+
+  // 2_All_Policies
+  const apRows = sheetRows('2_All_Policies');
+  let apHeader = -1;
+  for (let i = 0; i < apRows.length; i++) {
+    if (String(apRows[i][0]).includes('Policy Owner ID')) { apHeader = i; break; }
+  }
+  const apH = apHeader >= 0 ? apRows[apHeader] : [];
+  const policies = [];
+  for (let i = apHeader + 1; i < apRows.length; i++) {
+    const r = apRows[i];
+    if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
+    const g = col => {
+      const idx = apH.indexOf(col);
+      return idx >= 0 ? r[idx] : '';
+    };
+    const annPrem = parseFloat(g('Annual Premium ($)')) || parseFloat(g('Annual / Yearly Premium ($)')) || 0;
+    policies.push({
+      ownerID: g('Policy Owner ID'),
+      ownerName: g('Policy Owner Name'),
+      insuredID: g('Life Insured ID'),
+      insuredName: String(g('Life Insured Name')).trim(),
+      insurer: g('Insurer'),
+      policyNo: g('Policy Number'),
+      planName: String(g('Plan Name')).trim(),
+      policyType: g('Policy Type'),
+      category: g('Policy Category'),
+      startDate: excelSerialToDisplay(g('Policy Start Date')),
+      premEndDate: excelSerialToDisplay(g('Premium End Date')),
+      premEndYear: excelSerialToYear(g('Premium End Date')),
+      maturityDate: excelSerialToDisplay(g('Policy Maturity / End Date')),
+      status: g('Policy Status') || 'Active',
+      premFreq: g('Premium Frequency'),
+      annualPrem: annPrem,
+      monthlyEquiv: parseFloat(g('Monthly Equiv. ($)')) || annPrem / 12,
+      premTerm: g('Payment Term (Yrs)'),
+      paidToDate: parseFloat(g('Premiums Paid to Date ($)')) || 0,
+      sumAssured: parseFloat(g('Sum Assured ($)')) || 0,
+      accidentalDeath: parseFloat(g('Accidental Death  Benefit ($)')) || 0,
+      deathBenefit: parseFloat(g('Death Benefit ($)')) || 0,
+      tpdBenefit: parseFloat(g('TPD Benefit ($)')) || 0,
+      ciCoverage: parseFloat(g('CI Coverage ($)')) || 0,
+      eciCoverage: parseFloat(g('ECI Coverage ($)')) || 0,
+      multiplierEndAge: parseInt(g('Multiplier End Age')) || 0,
+      medisave: parseFloat(g('Medisave Premiums / Yr ($)  [illustration only]')) || 0,
+      remarks: g('Remarks'),
+      riders: g('Riders'),
+      paymentMode: g('Payment Mode  (auto)'),
+      cpf: String(g('CPF Premium?  (Yes / No)')).toLowerCase() === 'yes',
+      source: g('Source of Premiums  (Self / Joint / Other)') || 'Self',
+    });
+  }
+
+  // 4_Coverage_Summary
+  const csRows = sheetRows('4_Coverage_Summary');
+  let csH = -1;
+  for (let i = 0; i < csRows.length; i++) {
+    if (String(csRows[i][0]).includes('Client ID')) { csH = i; break; }
+  }
+  const csHdr = csH >= 0 ? csRows[csH] : [];
+  const coverages = {};
+  for (let i = csH + 1; i < csRows.length; i++) {
+    const r = csRows[i];
+    if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
+    const g = col => { const idx = csHdr.indexOf(col); return idx >= 0 ? r[idx] : ''; };
+    coverages[g('Client ID')] = {
+      totalMonthly: parseFloat(g('Total Monthly ($)')) || 0,
+      totalAnnual: parseFloat(g('Total Annual ($)')) || 0,
+      paidToDate: parseFloat(g('Total Paid to Date ($)')) || 0,
+      activePolicies: parseInt(g('Active Policies')) || 0,
+      hasHS: String(g('Has H&S?')).toLowerCase() === 'yes',
+      sumAssured: parseFloat(g('Sum Assured ($)')) || 0,
+      totalDeath: parseFloat(g('Total Death ($)')) || 0,
+      totalTPD: parseFloat(g('Total TPD ($)')) || 0,
+      totalCI: parseFloat(g('Total CI ($)')) || 0,
+      totalECI: parseFloat(g('Total ECI ($)')) || 0,
+      fromSelf: parseFloat(g('From Self ($)')) || 0,
+      fromJoint: parseFloat(g('From Joint Account ($)')) || 0,
+    };
+  }
+
+  // Basic_Info coverage needs
+  const biRows = sheetRows('Basic_Info');
+  const needs = {};
+  const afford = {};
+  let inNeeds = false, inAfford = false;
+  for (const r of biRows) {
+    const k = String(r[0] || '').trim();
+    if (k === 'Death') { needs.death = { rec: parseFloat(r[1])||0, have: parseFloat(r[2])||0, shortfall: parseFloat(r[3])||0 }; }
+    if (k === 'TPD') { needs.tpd = { rec: parseFloat(r[1])||0, have: parseFloat(r[2])||0, shortfall: parseFloat(r[3])||0 }; }
+    if (k === 'ECI (Early Critical Illness)') { needs.eci = { rec: parseFloat(r[1])||0, have: parseFloat(r[2])||0, shortfall: parseFloat(r[3])||0 }; }
+    if (k === 'CI (Critical Illness)') { needs.ci = { rec: parseFloat(r[1])||0, have: parseFloat(r[2])||0, shortfall: parseFloat(r[3])||0 }; }
+    if (k === 'Protection (20% rule)') afford.protection = { yr: parseFloat(r[1])||0, mo: parseFloat(r[2])||0, pct: parseFloat(r[3])||0 };
+    if (k === 'Wealth Accumulation (30% rule)') afford.wealth = { yr: parseFloat(r[1])||0, mo: parseFloat(r[2])||0, pct: parseFloat(r[3])||0 };
+    if (k === 'Total (Protection + Wealth)') afford.total = { yr: parseFloat(r[1])||0, mo: parseFloat(r[2])||0, pct: parseFloat(r[3])||0 };
+    if (k === 'Self (own income)') afford.self = { yr: parseFloat(r[1])||0, mo: parseFloat(r[2])||0 };
+    if (k === 'Joint Account') afford.joint = { yr: parseFloat(r[1])||0, mo: parseFloat(r[2])||0 };
+    if (k === 'Joint Account Capacity') afford.jointCap = { yr: parseFloat(r[1])||0 };
+    if (k === 'Joint Account Headroom') afford.jointHeadroom = { yr: parseFloat(r[1])||0 };
+  }
+
+  // 5_Maturity_Schedule
+  const msRows = sheetRows('5_Maturity_Schedule');
+  let msH = -1;
+  for (let i = 0; i < msRows.length; i++) {
+    if (String(msRows[i][0]).includes('Client ID')) { msH = i; break; }
+  }
+  const msHdr = msH >= 0 ? msRows[msH] : [];
+  const maturityData = [];
+  for (let i = msH + 1; i < msRows.length; i++) {
+    const r = msRows[i];
+    if (!r[0] || !String(r[0]).startsWith('IC-')) continue;
+    const g = col => { const idx = msHdr.indexOf(col); return idx >= 0 ? r[idx] : ''; };
+    const pname = String(g('Plan Name')).trim();
+    if (!pname) continue;
+    maturityData.push({
+      clientID: g('Client ID'),
+      clientName: g('Client Name'),
+      insuredID: g('Life Insured ID'),
+      insuredName: g('Life Insured Name'),
+      policyNo: g('Policy Number'),
+      planName: pname,
+      insurer: g('Insurer'),
+      maturityDate: excelSerialToDisplay(g('Policy Maturity Date')),
+      insuredAge: g('Insured Age at Maturity'),
+      yearsTo: g('Years to Maturity'),
+      status: g('Policy Status'),
+      guaranteedVal: parseFloat(g('Guaranteed Maturity Value ($)')) || 0,
+      nonGuaranteedVal: parseFloat(g('Non-Guaranteed Maturity Value ($)')) || 0,
+      totalIllustrated: parseFloat(g('Total Illustrated Maturity Value ($)')) || 0,
+      notes: g('Notes on Payout'),
+      annualPrem: parseFloat(g('Annual Premium ($)')) || 0,
+      premTerm: g('Premium Payment Term (yrs)'),
+      remainingPrem: parseFloat(g('Remaining Premiums to Pay ($)')) || 0,
+      paidToDate: parseFloat(g('Premiums Paid to Date ($)')) || 0,
+      netGain: parseFloat(g('Net Gain at Maturity ($)')) || 0,
+    });
+  }
+
+  // 7_Payment_Milestone
+  const pmRows = sheetRows('7_Payment_Milestone');
+  const pmPolicies = [];
+  const pmYears = [];
+  let inPolicies = false, inYears = false;
+  let pmYearHeader = [];
+  for (const r of pmRows) {
+    const k = String(r[0] || '').trim();
+    if (k === '#') { inPolicies = true; continue; }
+    if (k === 'Year') { inYears = true; pmYearHeader = r; continue; }
+    if (inPolicies && !inYears) {
+      const n = parseInt(r[0]);
+      if (!isNaN(n) && r[1] && r[1] !== 0) {
+        pmPolicies.push({ name: String(r[1]).trim(), type: r[3], annualPrem: parseFloat(r[4])||0, cpf: r[5], premEndYear: r[7] });
+      }
+    }
+    if (inYears) {
+      const yr = parseInt(r[0]);
+      if (!isNaN(yr) && yr >= 2020 && yr <= 2130) {
+        const totalIdx = pmYearHeader.indexOf('Total Annual  Premium ($)');
+        const cumIdx = pmYearHeader.indexOf('Cumulative  Paid ($)');
+        const milIdx = pmYearHeader.indexOf('Milestone');
+        const selfIdx = pmYearHeader.indexOf('From Owner  (Self) ($)');
+        const jointIdx = pmYearHeader.indexOf('From Joint  Account ($)');
+        const capIdx = pmYearHeader.indexOf('Joint  Capacity ($)');
+        const headIdx = pmYearHeader.indexOf('Joint  Headroom ($)');
+        pmYears.push({
+          year: yr,
+          total: parseFloat(r[totalIdx >= 0 ? totalIdx : 6]) || 0,
+          cumulative: parseFloat(r[cumIdx >= 0 ? cumIdx : 7]) || 0,
+          milestone: String(r[milIdx >= 0 ? milIdx : 8] || '').trim(),
+          fromSelf: parseFloat(r[selfIdx >= 0 ? selfIdx : 9]) || 0,
+          fromJoint: parseFloat(r[jointIdx >= 0 ? jointIdx : 10]) || 0,
+          jointCap: parseFloat(r[capIdx >= 0 ? capIdx : 12]) || 18000,
+          jointHeadroom: parseFloat(r[headIdx >= 0 ? headIdx : 13]) || 0,
+          rowCells: r,
+        });
+      }
+    }
+  }
+
+  // Report date
+  const today = new Date();
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const reportDate = String(today.getDate()).padStart(2,'0') + ' ' + months[today.getMonth()] + ' ' + today.getFullYear();
+
+  return {
+    owner, clients, policies, coverages, needs, afford,
+    maturityData, pmPolicies, pmYears, reportDate,
+    ownerName: owner.name,
+    ownerDOB: owner.dobPw,
+  };
+}
+
+// ── FORMAT HELPERS ──────────────────────────────────────────
+const fmt = n => n === 0 ? '$0' : '$' + Math.abs(Math.round(n)).toLocaleString();
+const fmtPct = n => (n * 100).toFixed(1) + '%';
+const pctColor = (pct, goodMax) => pct <= goodMax ? 'var(--green)' : pct <= goodMax * 1.5 ? 'var(--amber)' : 'var(--red)';
+const covColor = n => n > 0 ? 'green' : 'red';
+
+// ── BUILD DASHBOARD HTML ────────────────────────────────────
+function buildDashboardHTML(d) {
+  const { owner, clients, policies, coverages, needs, afford, maturityData, pmPolicies, pmYears, reportDate } = d;
+
+  const oc = coverages[owner.id] || {};
+  const totalActive = policies.filter(p => String(p.status).toLowerCase() === 'active').length;
+  const totalAnnual = oc.totalAnnual || 0;
+  const totalMonthly = oc.totalMonthly || 0;
+  const totalPaid = oc.paidToDate || 0;
+  const fromSelf = oc.fromSelf || 0;
+  const fromJoint = oc.fromJoint || 0;
+
+  // Group policies by insured
+  const insureds = clients;
+  const policiesByInsured = {};
+  for (const c of clients) policiesByInsured[c.id] = policies.filter(p => p.insuredID === c.id);
+
+  // Build Coverage Summary cards per insured
+  function buildCovCards(client) {
+    const cv = coverages[client.id] || {};
+    const isChild = client.isChild;
+    const rows = [
+      { label: 'Sum Assured (Base)', val: cv.sumAssured },
+      { label: 'Death Benefit', val: cv.totalDeath },
+      { label: 'TPD Benefit', val: cv.totalTPD },
+      { label: 'CI Coverage', val: cv.totalCI },
+      { label: 'ECI Coverage', val: cv.totalECI },
+    ];
+    // find accidental from policies
+    const accPolicies = policies.filter(p => p.insuredID === client.id && p.accidentalDeath > 0);
+    const totalAcc = accPolicies.reduce((s, p) => s + p.accidentalDeath, 0);
+    rows.push({ label: 'Accidental Death', val: totalAcc, amber: true });
+    // HS
+    const hsPolicy = policies.find(p => p.insuredID === client.id && p.policyType === 'H&S');
+    rows.push({ label: 'H&S / MediShield', val: 0, text: hsPolicy ? (hsPolicy.planName) : 'Not Covered', red: !hsPolicy });
+    return rows.map(r => {
+      let cls = r.text ? (r.red ? 'red' : 'green') : (r.amber ? 'amber' : covColor(r.val));
+      const displayVal = r.text ? r.text : (r.val > 0 ? fmt(r.val) : '$0');
+      if (!r.text && r.val === 0) cls = 'red';
+      return `<div class="cov-card ${cls}"><span class="cov-type">${r.label}</span><span class="cov-amount">${displayVal}</span></div>`;
+    }).join('');
+  }
+
+  const colClass = clients.length === 1 ? 'cols-1' : clients.length === 2 ? 'cols-2' : 'cols-3';
+
+  // Observation box
+  function buildObservations() {
+    const obs = [];
+    if ((oc.totalDeath || 0) === 0) obs.push(`<li><b>${owner.name} has zero protection coverage as life insured</b> — no Death, TPD, CI, or ECI plans in own name.</li>`);
+    if (!oc.hasHS) obs.push(`<li><b>No H&S / MediShield Life supplement for ${owner.name}</b> — unprotected against hospitalisation costs.</li>`);
+    const childrenNoHS = clients.filter(c => c.isChild && !((coverages[c.id]||{}).hasHS));
+    childrenNoHS.forEach(c => obs.push(`<li><b>No H&S for ${c.name}</b></li>`));
+    const jointHeadroom = afford.jointHeadroom?.yr || 0;
+    if (jointHeadroom < 0) obs.push(`<li><b>Joint Account over capacity by ${fmt(Math.abs(jointHeadroom))}/yr</b> — premiums exceed joint account top-up capacity.</li>`);
+    // multiplier drop-offs
+    const multiplierPolicies = policies.filter(p => p.multiplierEndAge > 0);
+    multiplierPolicies.forEach(p => obs.push(`<li><b>Multiplier drop-off at age ${p.multiplierEndAge}</b> for ${p.insuredName} — ${p.planName}: coverage drops to base SA at age ${p.multiplierEndAge}.</li>`));
+    if (obs.length === 0) return '';
+    return `<div class="obs-box"><h3>⚠ Coverage Observations</h3><ul>${obs.join('')}</ul></div>`;
+  }
+
+  // Policy cards per insured
+  function buildPolicyCard(p) {
+    const isWealth = String(p.category).toLowerCase().includes('wealth');
+    const isLapsed = String(p.status).toLowerCase() === 'lapsed';
+    const statusBadge = isLapsed ? '<span class="badge lapsed">Lapsed</span>' : '<span class="badge active">Active</span>';
+    const cpfBadge = p.cpf ? '<span class="badge cpf">CPF</span>' : '';
+    const pmMode = p.paymentMode || (p.premFreq === 'Single Premium' ? 'Single Premium' : p.premFreq === 'Monthly' ? 'Monthly GIRO' : 'Yearly GIRO');
+
+    let rows = `<div class="pc-row"><span class="lbl">Annual Premium</span><span class="val">${fmt(p.annualPrem)}</span></div>`;
+    if (p.premTerm) rows += `<div class="pc-row"><span class="lbl">Premium Term</span><span class="val">${p.premTerm} yrs</span></div>`;
+    if (p.premEndDate && p.premEndDate !== '—') rows += `<div class="pc-row"><span class="lbl">Premium End</span><span class="val">${p.premEndDate}</span></div>`;
+    if (p.paidToDate) rows += `<div class="pc-row"><span class="lbl">Paid to Date</span><span class="val">${fmt(p.paidToDate)}</span></div>`;
+    if (p.sumAssured > 0) rows += `<div class="pc-row"><span class="lbl">Sum Assured</span><span class="val">${fmt(p.sumAssured)}</span></div>`;
+    if (p.deathBenefit > 0) rows += `<div class="pc-row"><span class="lbl">Death Benefit</span><span class="val">${fmt(p.deathBenefit)}</span></div>`;
+    if (p.tpdBenefit > 0) rows += `<div class="pc-row"><span class="lbl">TPD Benefit</span><span class="val">${fmt(p.tpdBenefit)}</span></div>`;
+    if (p.ciCoverage > 0) rows += `<div class="pc-row"><span class="lbl">CI Coverage</span><span class="val">${fmt(p.ciCoverage)}</span></div>`;
+    if (p.eciCoverage > 0) rows += `<div class="pc-row"><span class="lbl">ECI Coverage</span><span class="val">${fmt(p.eciCoverage)}</span></div>`;
+    if (p.accidentalDeath > 0) rows += `<div class="pc-row"><span class="lbl">Accidental Death</span><span class="val">${fmt(p.accidentalDeath)}</span></div>`;
+    if (p.multiplierEndAge > 0) rows += `<div class="pc-row"><span class="lbl">Multiplier End Age</span><span class="val">${p.multiplierEndAge}</span></div>`;
+    if (p.medisave > 0) rows += `<div class="pc-row"><span class="lbl">Medisave / Yr</span><span class="val">${fmt(p.medisave)}</span></div>`;
+
+    const riderHtml = p.riders ? `<div class="pc-riders">Riders: ${p.riders}</div>` : '';
+    const remarkHtml = p.remarks ? `<div class="pc-remarks">Remarks: ${p.remarks}</div>` : '';
+
+    return `<div class="policy-card${isWealth?' wealth':''}${isLapsed?' lapsed':''}">
+      <div class="pc-top">
+        <div class="pc-badges"><span class="badge insurer">${p.insurer}</span><span class="badge type">${p.policyType}</span>${cpfBadge}${statusBadge}</div>
+        <div class="pc-name">${p.planName}</div>
+        <div class="pc-no">${p.policyNo}</div>
+      </div>
+      <div class="pc-body">${rows}</div>
+      <div class="pc-footer">
+        <span class="pill-sm">${pmMode}</span><span class="pill-sm">${p.source}</span>
+        ${riderHtml}${remarkHtml}
+      </div>
+    </div>`;
+  }
+
+  // Maturity cards
+  function buildMaturityCard(m) {
+    const hasPending = m.guaranteedVal === 0 && m.nonGuaranteedVal === 0;
+    const pending = '<span class="pending-badge">Pending illustration</span>';
+    return `<div class="maturity-card">
+      <div class="mc-header"><div><div class="mc-name">${m.planName}</div><div class="mc-meta">${m.insurer} · ${m.policyNo} · Life Insured: ${m.insuredName}</div></div><span class="badge active" style="position:static">Active</span></div>
+      <div class="mc-grid">
+        <div class="mc-item"><div class="mc-lbl">Annual Premium</div><div class="mc-val">${fmt(m.annualPrem)}</div></div>
+        <div class="mc-item"><div class="mc-lbl">Premium Term</div><div class="mc-val">${m.premTerm} yrs</div></div>
+        <div class="mc-item"><div class="mc-lbl">Paid to Date</div><div class="mc-val">${fmt(m.paidToDate)}</div></div>
+        <div class="mc-item"><div class="mc-lbl">Remaining to Pay</div><div class="mc-val">${fmt(m.remainingPrem)}</div></div>
+        <div class="mc-item"><div class="mc-lbl">Guaranteed Maturity</div><div class="mc-val">${m.guaranteedVal > 0 ? fmt(m.guaranteedVal) : '$— ' + pending}</div></div>
+        <div class="mc-item"><div class="mc-lbl">Non-Guaranteed Maturity</div><div class="mc-val">${m.nonGuaranteedVal > 0 ? fmt(m.nonGuaranteedVal) : '$— ' + pending}</div></div>
+        <div class="mc-item"><div class="mc-lbl">Net Gain</div><div class="mc-val">${m.netGain !== 0 ? fmt(m.netGain) : '$— ' + pending}</div></div>
+      </div>
+    </div>`;
+  }
+
+  // Payment chart SVG
+  function buildPaymentChart() {
+    if (!pmYears.length) return '';
+    const years = pmYears.map(r => r.year);
+    const totals = pmYears.map(r => r.total);
+    const maxVal = Math.max(...totals, 1000);
+    const jointCap = pmYears[0]?.jointCap || 18000;
+    const W=900,H=280,PL=65,PR=60,PT=30,PB=50;
+    const cW=W-PL-PR,cH=H-PT-PB;
+    const n=years.length;
+    const barW=Math.max(5,Math.floor(cW/n)-2);
+    let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">`;
+    for(let v=0;v<=maxVal;v+=Math.ceil(maxVal/5/10000)*10000){
+      const y=PT+cH-(v/maxVal)*cH;
+      svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#e2e6ed" stroke-width="1"/>`;
+      svg+=`<text x="${PL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#6b7a99" font-family="IBM Plex Mono">$${(v/1000).toFixed(0)}k</text>`;
+    }
+    const jy=PT+cH-(jointCap/maxVal)*cH;
+    svg+=`<line x1="${PL}" y1="${jy}" x2="${W-PR}" y2="${jy}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="5,3"/>`;
+    svg+=`<text x="${W-PR+2}" y="${jy+4}" font-size="9" fill="#E53935" font-family="IBM Plex Sans">Joint Cap</text>`;
+    years.forEach((yr,i)=>{
+      const x=PL+i*(cW/n)+(cW/n-barW)/2;
+      const h=Math.max(2,(totals[i]/maxVal)*cH);
+      const y=PT+cH-h;
+      const ms=pmYears[i]?.milestone;
+      svg+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" fill="${ms?'#E67E22':'#00A99D'}" rx="2"><title>${yr}: ${fmt(totals[i])}${ms?' | ★ '+ms:''}</title></rect>`;
+      if(ms) svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#E67E22">★</text>`;
+      if(i%4===0||ms) svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${(PT+cH+15).toFixed(1)}" text-anchor="middle" font-size="9" fill="#6b7a99" transform="rotate(-40 ${(x+barW/2).toFixed(1)} ${(PT+cH+15).toFixed(1)})">${yr}</text>`;
+    });
+    svg+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+cH}" stroke="#1B2A4A" stroke-width="1.5"/>`;
+    svg+=`<line x1="${PL}" y1="${PT+cH}" x2="${W-PR}" y2="${PT+cH}" stroke="#1B2A4A" stroke-width="1.5"/>`;
+    svg+=`<rect x="${PL}" y="${H-16}" width="12" height="10" fill="#00A99D" rx="2"/><text x="${PL+15}" y="${H-8}" font-size="10" fill="#333" font-family="IBM Plex Sans">Annual Premium</text>`;
+    svg+=`<rect x="${PL+130}" y="${H-16}" width="12" height="10" fill="#E67E22" rx="2"/><text x="${PL+145}" y="${H-8}" font-size="10" fill="#333" font-family="IBM Plex Sans">Milestone year</text>`;
+    svg+=`<line x1="${PL+270}" y1="${H-10}" x2="${PL+285}" y2="${H-10}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="4,2"/><text x="${PL+288}" y="${H-7}" font-size="10" fill="#E53935" font-family="IBM Plex Sans">Joint Capacity</text>`;
+    svg+='</svg>';
+    return svg;
+  }
+
+  // Payment table rows
+  function buildPaymentRows() {
+    return pmYears.map(r => {
+      const hd = r.jointHeadroom;
+      const hdClass = hd < 0 ? 'td-red' : 'td-green';
+      const hdStr = hd < 0 ? `($${Math.abs(Math.round(hd)).toLocaleString()})` : fmt(hd);
+      const ms = r.milestone ? `<span style="color:var(--amber);font-weight:600">★ ${r.milestone}</span>` : '';
+      return `<tr>
+        <td>${r.year}</td>
+        <td>${fmt(r.fromSelf)}</td>
+        <td>${fmt(r.fromJoint)}</td>
+        <td>${fmt(r.total)}</td>
+        <td>${fmt(r.cumulative)}</td>
+        <td>${ms}</td>
+        <td class="${hdClass}">${hdStr}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // Coverage timeline SVG per insured
+  function buildTimelineSVG(client) {
+    const clPolicies = policies.filter(p => p.insuredID === client.id && (p.deathBenefit > 0 || p.accidentalDeath > 0));
+    if (!clPolicies.length) {
+      return `<p style="color:var(--muted);font-size:13px;text-align:center;padding:20px">No protection coverage recorded for ${client.name} as life insured.</p>`;
+    }
+    const currentAge = parseInt(client.age) || 0;
+    const maxAge = 100;
+    const W=700,H=180,PL=65,PR=30,PT=20,PB=40;
+    const cW=W-PL-PR,cH=H-PT-PB;
+    const ageRange=maxAge-currentAge||1;
+    const maxPolicyCov = clPolicies.reduce((m,p) => Math.max(m, p.deathBenefit||0, p.accidentalDeath||0), 0);
+    const maxVal = maxPolicyCov * 1.2 || 300000;
+    const xPos = age => PL + ((age-currentAge)/ageRange)*cW;
+    const yPos = val => PT + cH - (val/maxVal)*cH;
+    let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto" xmlns="http://www.w3.org/2000/svg">`;
+    [0,100000,200000,250000,300000].filter(v=>v<=maxVal).forEach(v=>{
+      const y=yPos(v);
+      svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#e2e6ed" stroke-width="1"/>`;
+      svg+=`<text x="${PL-8}" y="${y+4}" text-anchor="end" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono">$${(v/1000).toFixed(0)}k</text>`;
+    });
+    const colors=['#1565C0','#00A99D','#27AE60','#E67E22'];
+    clPolicies.forEach((p,i) => {
+      const cov = p.deathBenefit || p.accidentalDeath;
+      const baseCov = p.sumAssured || cov;
+      const multAge = p.multiplierEndAge;
+      const endAge = maxAge;
+      const col = colors[i % colors.length];
+      const dash = p.accidentalDeath > 0 && p.deathBenefit === 0 ? '4,2' : '';
+      if (multAge > 0 && multAge < maxAge) {
+        svg+=`<polyline points="${xPos(currentAge)},${yPos(cov)} ${xPos(multAge)},${yPos(cov)} ${xPos(multAge)},${yPos(baseCov)} ${xPos(endAge)},${yPos(baseCov)}" fill="none" stroke="${col}" stroke-width="2"${dash?` stroke-dasharray="${dash}"`:''}/>`; 
+        svg+=`<line x1="${xPos(multAge)}" y1="${PT}" x2="${xPos(multAge)}" y2="${PT+cH}" stroke="${col}" stroke-width="1" stroke-dasharray="4,2"/>`;
+        svg+=`<text x="${xPos(multAge)+3}" y="${PT+12}" font-size="9" fill="${col}">Age ${multAge}</text>`;
+      } else {
+        svg+=`<line x1="${xPos(currentAge)}" y1="${yPos(cov)}" x2="${xPos(endAge)}" y2="${yPos(cov)}" stroke="${col}" stroke-width="2"${dash?` stroke-dasharray="${dash}"`:''}/>`; 
+      }
+    });
+    svg+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+cH}" stroke="#1B2A4A" stroke-width="1.5"/>`;
+    svg+=`<line x1="${PL}" y1="${PT+cH}" x2="${W-PR}" y2="${PT+cH}" stroke="#1B2A4A" stroke-width="1.5"/>`;
+    for(let age=currentAge;age<=maxAge;age+=10){
+      svg+=`<text x="${xPos(age)}" y="${PT+cH+14}" text-anchor="middle" font-size="9" fill="#6b7a99" font-family="IBM Plex Mono">${age}</text>`;
+    }
+    svg+=`<text x="${PL+cW/2}" y="${H-5}" text-anchor="middle" font-size="9" fill="#6b7a99">Age</text>`;
+    svg+='</svg>';
+    const legend = clPolicies.map((p,i)=>`<span style="color:${colors[i%colors.length]};font-size:11px">■ ${p.planName} (${p.deathBenefit>0?'Death/TPD':'Accidental'})</span>`).join(' ');
+    return svg + `<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px">${legend}</div>`;
+  }
+
+  // Coverage gap summary for owner
+  function buildGapCards() {
+    const ov = coverages[owner.id] || {};
+    const items = [
+      { icon:'☠', label:'Death / Life Coverage', covered: ov.totalDeath > 0, amount: ov.totalDeath > 0 ? fmt(ov.totalDeath) : 'Need ' + fmt(needs.death?.rec||0) },
+      { icon:'♿', label:'TPD Coverage', covered: ov.totalTPD > 0, amount: ov.totalTPD > 0 ? fmt(ov.totalTPD) : 'Need ' + fmt(needs.tpd?.rec||0) },
+      { icon:'🩺', label:'Critical Illness', covered: ov.totalCI > 0, amount: ov.totalCI > 0 ? fmt(ov.totalCI) : 'Need ' + fmt(needs.ci?.rec||0) },
+      { icon:'⚡', label:'Early CI (ECI)', covered: ov.totalECI > 0, amount: ov.totalECI > 0 ? fmt(ov.totalECI) : 'Need ' + fmt(needs.eci?.rec||0) },
+      { icon:'🏥', label:'H&S / MediShield', covered: ov.hasHS, amount: ov.hasHS ? 'Covered' : 'Not Covered' },
+      { icon:'📈', label:'ILP / Savings', covered: policies.some(p=>p.insuredID===owner.id&&String(p.category).toLowerCase().includes('wealth')), amount: policies.filter(p=>p.insuredID===owner.id&&String(p.category).toLowerCase().includes('wealth')).length + ' ILP policies' },
+      { icon:'💥', label:'Accidental Coverage', covered: policies.some(p=>p.insuredID===owner.id&&p.accidentalDeath>0), amount: fmt(policies.filter(p=>p.insuredID===owner.id).reduce((s,p)=>s+p.accidentalDeath,0)) },
+    ];
+    return items.map(it => `<div class="gap-card ${it.covered?'covered':'missing'}">
+      <div class="gap-icon">${it.icon}</div>
+      <div class="gap-label">${it.label}</div>
+      <div class="gap-status">${it.covered?'✓ Covered':'⚠ Not Covered'}</div>
+      <div class="gap-amount">${it.amount}</div>
+    </div>`).join('');
+  }
+
+  // Needs cards
+  function buildNeedsCards() {
+    const items = [
+      { icon:'☠', label:'Death Coverage', key:'death' },
+      { icon:'♿', label:'TPD Coverage', key:'tpd' },
+      { icon:'⚡', label:'Early CI (ECI)', key:'eci' },
+      { icon:'🩺', label:'Critical Illness (CI)', key:'ci' },
+    ];
+    return items.map(it => {
+      const n = needs[it.key] || {};
+      const status = n.shortfall > 0 ? 'shortfall' : n.shortfall < 0 ? 'surplus' : 'met';
+      const statusLabel = status === 'shortfall' ? '⚠ Shortfall' : status === 'surplus' ? '✓ Surplus' : '✓ Met';
+      return `<div class="needs-card">
+        <div class="needs-type">${it.icon} ${it.label}</div>
+        <div class="needs-rec">Recommended: <b>${fmt(n.rec||0)}</b></div>
+        <div class="needs-have">Currently Have: <b>${fmt(n.have||0)}</b></div>
+        <div class="needs-shortfall ${status}">Shortfall: ${fmt(n.shortfall||0)}</div>
+        <span class="status-badge ${status}">${statusLabel}</span>
+      </div>`;
+    }).join('');
+  }
+
+  // Afford cards
+  function buildAffordCards() {
+    const income = owner.income || 1;
+    const yearlyIncome = income * 12;
+    const ap = afford;
+    const cards = [];
+    if (ap.protection) {
+      const pct = ap.protection.pct;
+      const col = pct <= 0.2 ? 'var(--green)' : 'var(--amber)';
+      const bar = Math.min(100, pct * 100 / 0.2 * 100) / 100;
+      cards.push({ label:'Protection Premiums', yr:fmt(ap.protection.yr), mo:`${fmt(ap.protection.mo)}/mth · ${fmtPct(pct)} of income`, note:`${pct<=0.2?'✓ Within':'↑ Above'} 20% target`, col, bar });
+    }
+    if (ap.wealth) {
+      const pct = ap.wealth.pct;
+      const col = pct >= 0.3 ? 'var(--green)' : 'var(--amber)';
+      cards.push({ label:'Wealth Accumulation', yr:fmt(ap.wealth.yr), mo:`${fmt(ap.wealth.mo)}/mth · ${fmtPct(pct)} of income`, note:pct>=0.3?'✓ Meets 30% target':'↓ Below 30% target', col, bar:Math.min(100,pct*100) });
+    }
+    if (ap.total) {
+      const pct = ap.total.pct;
+      const col = pct > 0.5 ? 'var(--red)' : 'var(--green)';
+      cards.push({ label:'Total All Premiums', yr:fmt(ap.total.yr), mo:`${fmt(ap.total.mo)}/mth · ${fmtPct(pct)} of income`, note:pct>0.5?'⚠ High — reviewed with client':'✓ Within range', col, bar:Math.min(100,pct*100) });
+    }
+    if (ap.self) cards.push({ label:'Paid from Self', yr:fmt(ap.self.yr), mo:`${fmt(ap.self.mo)}/mth`, bar:50 });
+    if (ap.joint) {
+      const over = (ap.jointHeadroom?.yr||0) < 0;
+      cards.push({ label:'Paid from Joint Account', yr:fmt(ap.joint.yr), mo:`${fmt(ap.joint.mo)}/mth`, note:over?'⚠ Exceeds joint capacity':'✓ Within capacity', col:over?'var(--red)':'var(--green)', bar:100 });
+    }
+    if (ap.jointHeadroom) {
+      const h = ap.jointHeadroom.yr;
+      const isNeg = h < 0;
+      const cap = ap.jointCap?.yr || 18000;
+      cards.push({ label:'Joint Account Headroom', yr:`${isNeg?'(':''}${fmt(h)}${isNeg?')':''}`, mo:`Capacity ${fmt(cap)} — Charges ${fmt(ap.joint?.yr||0)}`, note:isNeg?`⚠ Over capacity by ${fmt(Math.abs(h))}/yr`:'✓ Headroom available', col:isNeg?'var(--red)':'var(--green)', bar:isNeg?100:40 });
+    }
+    return cards.map(c => `<div class="afford-card">
+      <div class="afford-label">${c.label}</div>
+      <div class="afford-yr${c.col&&c.yr.startsWith('(')?` style="color:var(--red)"`:''}">${c.yr}</div>
+      <div class="afford-mo">${c.mo||''}</div>
+      ${c.note?`<div class="afford-pct" style="color:${c.col||'var(--muted)'}">${c.note}</div>`:''}
+      <div class="progress-bar"><div class="progress-fill" style="width:${c.bar||0}%;background:${c.col||'var(--teal)'}"></div></div>
+    </div>`).join('');
+  }
+
+  // ── BUILD INSURED SECTIONS for policies tab ─────────────────
+  function buildInsuredSections() {
+    return insureds.map((cl,idx) => {
+      const clPolicies = policiesByInsured[cl.id] || [];
+      const policyCards = clPolicies.map(p => buildPolicyCard(p)).join('');
+      return `<div class="insured-section">
+        <div class="insured-toggle" onclick="togglePolicy('pg-${idx}',this)">
+          <div>
+            <div class="insured-toggle-name">${cl.name}</div>
+            <div class="insured-toggle-meta">${cl.isChild?`Age ${cl.age} · Child`:`Age ${cl.age} · Policy Owner`} · ${clPolicies.length} polic${clPolicies.length===1?'y':'ies'} as life insured</div>
+          </div>
+          <button class="toggle-btn">▼ Expand</button>
+        </div>
+        <div id="pg-${idx}" style="display:none">
+          <div class="policy-grid">${policyCards}</div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── COVERAGE COLUMNS ────────────────────────────────────────
+  function buildCoverageColumns() {
+    return insureds.map(cl => {
+      const isChild = cl.isChild;
+      const fundedNote = isChild ? `Funded via ${cl.jointName||'Joint Account'}` : `Monthly Income: ${fmt(cl.income)}/mth`;
+      return `<div class="insured-col">
+        <div class="insured-header">
+          <div class="insured-name">${cl.name}</div>
+          <div class="insured-meta">Age ${cl.age} · ${cl.gender} · ${isChild?'Child':'Policy Owner'} · ${(policiesByInsured[cl.id]||[]).length} policies as life insured<br>${fundedNote}</div>
+        </div>
+        <div class="cov-cards">${buildCovCards(cl)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── TIMELINE SECTIONS ────────────────────────────────────────
+  function buildTimelineSections() {
+    return insureds.map((cl,idx) => `<div style="background:#fff;border-radius:12px;margin-bottom:14px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.08)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:#f5f7fa;border-bottom:1px solid var(--border)">
+        <span style="font-weight:700;color:var(--navy)">${cl.name} — Coverage Timeline</span>
+        <button class="toggle-link" onclick="toggleSection('tl-${idx}')">▼ Expand</button>
+      </div>
+      <div id="tl-${idx}" style="display:none;padding:18px">${buildTimelineSVG(cl)}</div>
+    </div>`).join('');
+  }
+
+  // Summary stats for header
+  const firstPmYear = pmYears[0];
+
+  // ── FINAL HTML ───────────────────────────────────────────────
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${owner.name} — Client Policy Review</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#1B2A4A;--teal:#00A99D;--lightblue:#E8F4FD;--blue-accent:#1565C0;--bg:#F0F2F5;--white:#fff;--muted:#6b7a99;--border:#e2e6ed;--green:#27AE60;--green-bg:#E8F8F2;--amber:#E67E22;--amber-bg:#FEF4E8;--red:#E53935;--red-bg:#FDECEA;--grey:#C8CDD8;--grey-bg:#F5F6F8}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:#222;font-size:14px}
+.header{background:var(--navy);color:#fff;padding:20px 28px 16px}
+.header-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.client-name{font-size:26px;font-weight:700;letter-spacing:.3px}
+.client-sub{font-size:12px;color:#8eb4d4;margin-top:2px}
+.header-contact{text-align:right;font-size:12px;color:#aac4dc;line-height:1.6}
+.header-meta{margin-top:10px;font-size:12px;color:#aac4dc;display:flex;flex-wrap:wrap;gap:6px 18px}
+.header-meta span b{color:#fff}
+.stat-pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pill{background:var(--teal);color:#fff;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill span{font-weight:300;opacity:.85;margin-left:4px}
+@media print{.no-print{display:none!important}body{background:#fff}.tab-panel{display:block!important;page-break-before:always}.tab-bar{display:none}}
+.print-btn{position:fixed;top:16px;right:18px;z-index:9999;background:var(--teal);color:#fff;border:none;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.print-btn:hover{background:#008f84}
+.tab-bar{display:flex;background:#fff;border-bottom:2px solid var(--border);overflow-x:auto;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.07)}
+.tab-btn{padding:12px 20px;font-size:13px;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:all .15s}
+.tab-btn:hover{color:var(--navy)}
+.tab-btn.active{color:var(--teal);border-bottom-color:var(--teal)}
+.tab-btn.disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.tab-panel{display:none;padding:22px 24px;max-width:1400px;margin:0 auto}
+.tab-panel.active{display:block}
+.section-title{font-size:15px;font-weight:700;color:var(--navy);margin:22px 0 14px;padding-bottom:6px;border-bottom:2px solid var(--lightblue)}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.card-value{font-size:22px;font-weight:700;color:var(--navy)}
+.card-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.coverage-cols{display:grid;gap:18px;margin-bottom:20px}
+.coverage-cols.cols-1{grid-template-columns:1fr}
+.coverage-cols.cols-2{grid-template-columns:repeat(2,1fr)}
+.coverage-cols.cols-3{grid-template-columns:repeat(3,1fr)}
+.insured-col{background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.09)}
+.insured-header{background:var(--navy);color:#fff;padding:14px 16px}
+.insured-name{font-size:15px;font-weight:700}
+.insured-meta{font-size:11px;color:#aac4dc;margin-top:3px;line-height:1.5}
+.cov-cards{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.cov-card{border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center}
+.cov-card.green{background:var(--green-bg);border-left:3px solid var(--green)}
+.cov-card.amber{background:var(--amber-bg);border-left:3px solid var(--amber)}
+.cov-card.red{background:var(--red-bg);border-left:3px solid var(--red)}
+.cov-card.grey{background:var(--grey-bg);border-left:3px solid var(--grey)}
+.cov-type{font-size:12px;font-weight:600;color:#333}
+.cov-amount{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600}
+.cov-card.green .cov-amount{color:var(--green)}
+.cov-card.amber .cov-amount{color:var(--amber)}
+.cov-card.red .cov-amount{color:var(--red)}
+.obs-box{background:var(--amber-bg);border:1.5px solid var(--amber);border-radius:10px;padding:16px 20px;margin-bottom:20px}
+.obs-box h3{color:var(--amber);font-size:13px;font-weight:700;margin-bottom:10px}
+.obs-box ul{padding-left:18px}
+.obs-box li{margin-bottom:7px;font-size:13px;line-height:1.5;color:#5a3d0a}
+.gap-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.gap-card{flex:1;min-width:120px;max-width:180px;border-radius:8px;padding:10px 12px;text-align:center}
+.gap-card.covered{background:var(--green-bg);border:1.5px solid var(--green)}
+.gap-card.missing{background:var(--grey-bg);border:1.5px solid var(--amber)}
+.gap-icon{font-size:18px;margin-bottom:4px}
+.gap-label{font-size:11px;font-weight:600;color:#333;line-height:1.3}
+.gap-status{font-size:10px;margin-top:4px;font-weight:700}
+.gap-card.covered .gap-status{color:var(--green)}
+.gap-card.missing .gap-status{color:var(--amber)}
+.gap-amount{font-size:11px;color:var(--muted);margin-top:2px;font-family:'IBM Plex Mono',monospace}
+.insured-section{margin-bottom:16px;border-radius:12px;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.08)}
+.insured-toggle{background:var(--navy);color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.insured-toggle:hover{background:#243a61}
+.insured-toggle-name{font-size:14px;font-weight:700}
+.insured-toggle-meta{font-size:11px;color:#aac4dc;margin-top:2px}
+.toggle-btn{font-size:11px;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:12px;border:none;color:#fff;cursor:pointer}
+.policy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;padding:16px;background:#f8f9fc}
+.policy-card{background:#fff;border-radius:10px;border-left:4px solid var(--teal);box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;position:relative}
+.policy-card.wealth{border-left-color:var(--navy)}
+.policy-card.lapsed{border-left-color:var(--red);opacity:.7}
+.pc-top{padding:14px 14px 10px;border-bottom:1px solid var(--border)}
+.pc-badges{display:flex;gap:6px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase}
+.badge.insurer{background:var(--lightblue);color:var(--blue-accent)}
+.badge.type{background:#f0f0f5;color:#555}
+.badge.cpf{background:#fff3e0;color:#e65100}
+.badge.active{background:var(--green-bg);color:var(--green);position:absolute;top:10px;right:10px}
+.badge.lapsed{background:var(--red-bg);color:var(--red);position:absolute;top:10px;right:10px}
+.pc-name{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:3px;padding-right:50px}
+.pc-no{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted)}
+.pc-body{padding:10px 14px}
+.pc-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;border-bottom:1px solid #f2f2f5}
+.pc-row:last-child{border-bottom:none}
+.pc-row .lbl{color:var(--muted)}
+.pc-row .val{font-weight:600;color:#222;font-family:'IBM Plex Mono',monospace;font-size:12px}
+.pc-footer{padding:8px 14px;background:#fafbfc;border-top:1px solid var(--border);font-size:11px;color:var(--muted)}
+.pc-footer .pill-sm{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;background:var(--lightblue);color:var(--blue-accent);margin:2px 2px 0 0}
+.pc-riders{margin-top:5px;color:#444;font-size:11px}
+.pc-remarks{margin-top:4px;font-style:italic;color:var(--muted);font-size:11px}
+.maturity-card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px}
+.mc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.mc-name{font-size:14px;font-weight:700;color:var(--navy)}
+.mc-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.mc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.mc-item .mc-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.mc-item .mc-val{font-size:14px;font-weight:700;color:var(--navy);font-family:'IBM Plex Mono',monospace;margin-top:2px}
+.pending-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber);border-radius:8px;padding:1px 7px;margin-left:6px;vertical-align:middle}
+.chart-wrap{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:18px;overflow-x:auto}
+.chart-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:14px}
+.table-wrap{background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:18px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--navy);color:#fff;padding:9px 12px;text-align:left;font-weight:600;font-size:11px;white-space:nowrap}
+tbody tr:nth-child(even){background:#f8f9fc}
+tbody tr:hover{background:var(--lightblue)}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+.td-red{color:var(--red);font-weight:700}
+.td-green{color:var(--green);font-weight:700}
+.section-toggle{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.toggle-link{font-size:11px;color:var(--teal);cursor:pointer;font-weight:600;background:none;border:none;padding:0}
+.toggle-link:hover{text-decoration:underline}
+.needs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:20px}
+.needs-card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.needs-type{font-size:12px;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.needs-rec{font-size:13px;color:var(--muted);margin-bottom:4px}
+.needs-have{font-size:13px;color:var(--muted);margin-bottom:4px}
+.needs-shortfall{font-size:16px;font-weight:700;margin-bottom:8px}
+.needs-shortfall.deficit,.needs-shortfall.shortfall{color:var(--red)}
+.needs-shortfall.surplus{color:var(--green)}
+.needs-shortfall.met{color:var(--green)}
+.status-badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px}
+.status-badge.met{background:var(--green-bg);color:var(--green)}
+.status-badge.partial{background:var(--amber-bg);color:var(--amber)}
+.status-badge.shortfall{background:var(--red-bg);color:var(--red)}
+.status-badge.surplus{background:var(--green-bg);color:var(--green)}
+.afford-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.afford-card{background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.afford-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.afford-yr{font-size:20px;font-weight:700;color:var(--navy);font-family:'IBM Plex Mono',monospace}
+.afford-mo{font-size:12px;color:var(--muted);margin-top:2px}
+.afford-pct{font-size:12px;font-weight:600;margin-top:4px}
+.progress-bar{height:5px;background:var(--border);border-radius:3px;margin-top:6px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px}
+.footer{background:var(--navy);color:#aac4dc;text-align:center;padding:16px;font-size:11px;margin-top:30px}
+@media(max-width:768px){.coverage-cols.cols-3,.coverage-cols.cols-2{grid-template-columns:1fr}.policy-grid{grid-template-columns:1fr}.header-top{flex-direction:column}.header-contact{text-align:left}}
+</style>
+</head>
+<body>
+<button class="print-btn no-print" onclick="window.print()">🖨 Print / PDF</button>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="client-name">${owner.name}</div>
+      <div class="client-sub">Client Policy Review</div>
+    </div>
+    <div class="header-contact">${owner.email}<br>+65 ${owner.mobile}</div>
+  </div>
+  <div class="header-meta">
+    <span><b>Age</b> ${owner.age}</span>
+    <span><b>DOB</b> ${owner.dob}</span>
+    <span><b>Gender</b> ${owner.gender}</span>
+    <span><b>Occupation</b> ${owner.occupation}</span>
+    <span><b>Status</b> ${owner.marital}</span>
+    <span><b>Income</b> ${fmt(owner.income)}/mth</span>
+    <span><b>Expenses</b> ${fmt(owner.expenses)}/mth</span>
+    <span><b>Liabilities</b> ${fmt(owner.liabilities)}</span>
+    ${owner.jointName?`<span><b>Joint Account</b> ${owner.jointName}</span>`:''}
+    ${owner.jointTopup?`<span><b>Joint Top-up</b> ${fmt(owner.jointTopup)}/mth (${fmt(owner.jointTopup*12)}/yr)</span>`:''}
+    <span><b>Report Date</b> ${reportDate}</span>
+  </div>
+  <div class="stat-pills">
+    <div class="pill">Total Active Policies <span>${totalActive}</span></div>
+    <div class="pill">Total Annual Premium <span>${fmt(totalAnnual)}</span></div>
+    <div class="pill">Monthly Premium <span>${fmt(totalMonthly)}</span></div>
+    <div class="pill">Total Paid to Date <span>${fmt(totalPaid)}</span></div>
+    ${fromSelf?`<div class="pill">From Self <span>${fmt(fromSelf)}/yr</span></div>`:''}
+    ${fromJoint?`<div class="pill">From Joint Account <span>${fmt(fromJoint)}/yr</span></div>`:''}
+  </div>
+</div>
+
+<div class="tab-bar no-print">
+  <button class="tab-btn active" onclick="showTab('basic',event)">Basic Info</button>
+  <button class="tab-btn" onclick="showTab('coverage',event)">Coverage Summary</button>
+  <button class="tab-btn" onclick="showTab('policies',event)">All Policies</button>
+  <button class="tab-btn" onclick="showTab('maturity',event)">Maturity Schedule</button>
+  <button class="tab-btn" onclick="showTab('payment',event)">Payment Milestone</button>
+  <button class="tab-btn disabled" title="No data entered">Passive Income Timeline</button>
+  <button class="tab-btn disabled" title="No data entered">Payout Milestone</button>
+</div>
+
+<!-- TAB 1: BASIC INFO -->
+<div id="tab-basic" class="tab-panel active">
+  <div class="section-title">Client Profile Summary</div>
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr))">
+    <div class="card"><div class="card-label">Full Name</div><div class="card-value" style="font-size:16px">${owner.name}</div></div>
+    <div class="card"><div class="card-label">Age</div><div class="card-value">${owner.age}</div><div class="card-sub">${owner.gender} · ${owner.smoker==='Yes'?'Smoker':'Non-Smoker'}</div></div>
+    <div class="card"><div class="card-label">Occupation</div><div class="card-value" style="font-size:15px">${owner.occupation}</div></div>
+    <div class="card"><div class="card-label">Monthly Income</div><div class="card-value">${fmt(owner.income)}</div><div class="card-sub">${fmt(owner.income*12)}/yr</div></div>
+    <div class="card"><div class="card-label">Monthly Expenses</div><div class="card-value">${fmt(owner.expenses)}</div><div class="card-sub">Monthly Net: ${fmt(owner.income-owner.expenses)}</div></div>
+    <div class="card"><div class="card-label">Liabilities</div><div class="card-value">${fmt(owner.liabilities)}</div></div>
+    ${owner.jointName?`<div class="card"><div class="card-label">Joint Account</div><div class="card-value" style="font-size:13px">${owner.jointName}</div><div class="card-sub">Balance: ${fmt(owner.jointBalance)}</div></div>`:''}
+    ${owner.jointTopup?`<div class="card"><div class="card-label">Joint Top-up</div><div class="card-value">${fmt(owner.jointTopup)}</div><div class="card-sub">${fmt(owner.jointTopup*12)}/yr capacity</div></div>`:''}
+  </div>
+
+  <div class="section-title">Coverage Needs Calculator</div>
+  <div class="needs-grid">${buildNeedsCards()}</div>
+
+  <div class="section-title">Premium Affordability</div>
+  <div class="afford-grid">${buildAffordCards()}</div>
+</div>
+
+<!-- TAB 2: COVERAGE SUMMARY -->
+<div id="tab-coverage" class="tab-panel">
+  ${buildObservations()}
+  <div class="section-title">Coverage Snapshot — By Insured</div>
+  <div class="coverage-cols ${colClass}">${buildCoverageColumns()}</div>
+
+  <div class="section-title">Coverage Timeline — Per Insured</div>
+  ${buildTimelineSections()}
+
+  <div class="section-title">Coverage Gap Summary</div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:12px">Gap analysis for ${owner.name} (Policy Owner).</p>
+  <div class="gap-row">${buildGapCards()}</div>
+</div>
+
+<!-- TAB 3: ALL POLICIES -->
+<div id="tab-policies" class="tab-panel">
+  ${buildInsuredSections()}
+</div>
+
+<!-- TAB 4: MATURITY SCHEDULE -->
+<div id="tab-maturity" class="tab-panel">
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-bottom:20px">
+    <div class="card"><div class="card-label">Total Remaining to Pay</div><div class="card-value">${fmt(maturityData.reduce((s,m)=>s+m.remainingPrem,0))}</div><div class="card-sub">Across all wealth policies</div></div>
+    <div class="card"><div class="card-label">Paid to Date</div><div class="card-value">${fmt(totalPaid)}</div><div class="card-sub">All policies combined</div></div>
+    <div class="card"><div class="card-label">Policies in Schedule</div><div class="card-value">${maturityData.length}</div></div>
+  </div>
+  <div class="section-title">Maturity Details — Per Policy</div>
+  ${maturityData.map(m => buildMaturityCard(m)).join('') || '<p style="color:var(--muted);padding:20px;text-align:center">No maturity data entered yet.</p>'}
+</div>
+
+<!-- TAB 5: PAYMENT MILESTONE -->
+<div id="tab-payment" class="tab-panel">
+  <div class="card-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));margin-bottom:20px">
+    ${firstPmYear?`<div class="card"><div class="card-label">Current Annual Premium (${firstPmYear.year})</div><div class="card-value">${fmt(firstPmYear.total)}</div><div class="card-sub">Joint headroom: <span style="color:${firstPmYear.jointHeadroom<0?'var(--red)':'var(--green)'}">${firstPmYear.jointHeadroom<0?'('+fmt(Math.abs(firstPmYear.jointHeadroom))+')':fmt(firstPmYear.jointHeadroom)}</span></div></div>`:''}
+    <div class="card"><div class="card-label">Joint Account Capacity</div><div class="card-value">${fmt(owner.jointTopup*12||18000)}</div><div class="card-sub">${fmt(owner.jointTopup)}/mth top-up</div></div>
+  </div>
+  <div class="chart-wrap">
+    <div class="chart-title">Annual Premium Outlay — All Years</div>
+    ${buildPaymentChart()}
+  </div>
+  <div class="section-toggle">
+    <div class="section-title" style="margin:0">Year-by-Year Payment Table</div>
+    <button class="toggle-link" onclick="toggleSection('payment-table')">▼ Show full table</button>
+  </div>
+  <div id="payment-table" style="display:none">
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Year</th><th>From Self</th><th>From Joint</th><th>Total Annual</th><th>Cumulative</th><th>Milestone</th><th>Joint Headroom</th></tr></thead>
+        <tbody>${buildPaymentRows()}</tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Generated ${reportDate} &nbsp;|&nbsp; Strictly Confidential — For Client Review Only &nbsp;|&nbsp; All figures in SGD &nbsp;|&nbsp; Prepared by: FSC</div>
+
+<script>
+function showTab(name,event){document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+name).classList.add('active');if(event)event.target.classList.add('active')}
+function toggleSection(id){const el=document.getElementById(id);const btn=event.target;if(el.style.display==='none'||!el.style.display){el.style.display='block';btn.textContent=btn.textContent.replace('▼','▲').replace('Show','Hide')}else{el.style.display='none';btn.textContent=btn.textContent.replace('▲','▼').replace('Hide','Show')}}
+function togglePolicy(gridId,header){const btn=header.querySelector('.toggle-btn');const el=document.getElementById(gridId);const isOpen=el&&el.style.display==='block';document.querySelectorAll('[id^="pg-"]').forEach(pg=>{pg.style.display='none'});document.querySelectorAll('.insured-toggle .toggle-btn').forEach(b=>{b.textContent='▼ Expand'});if(!isOpen&&el){el.style.display='block';btn.textContent='▲ Collapse'}}
+<\/script>
+</body>
+</html>`;
+}
+</script>
+</body>
+</html>`;
