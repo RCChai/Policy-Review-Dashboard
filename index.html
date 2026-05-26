@@ -602,33 +602,45 @@ function buildDashboardHTML(d) {
     const totals = pmYears.map(r => r.total);
     const maxVal = Math.max(...totals, 1000);
     const jointCap = pmYears[0]?.jointCap || 18000;
-    const W=900,H=280,PL=65,PR=60,PT=30,PB=50;
-    const cW=W-PL-PR,cH=H-PT-PB;
+    // Dynamic width: at least 14px per year so bars are always readable; min 1100px
+    const PL=70,PR=70,PT=30,PB=60;
     const n=years.length;
-    const barW=Math.max(5,Math.floor(cW/n)-2);
-    let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;display:block" xmlns="http://www.w3.org/2000/svg">`;
-    for(let v=0;v<=maxVal;v+=Math.ceil(maxVal/5/10000)*10000){
+    const W=Math.max(1100,n*14+PL+PR), H=420;
+    const cW=W-PL-PR,cH=H-PT-PB;
+    const barW=Math.max(8,Math.floor(cW/n)-3);
+    // Fixed-size SVG inside a horizontally-scrollable container
+    let svg=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block" xmlns="http://www.w3.org/2000/svg">`;
+    // Y-axis grid lines and labels
+    const step=Math.ceil(maxVal/5/10000)*10000||5000;
+    for(let v=0;v<=maxVal+step*0.5;v+=step){
+      if(v>maxVal*1.05) break;
       const y=PT+cH-(v/maxVal)*cH;
-      svg+=`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="#e2e6ed" stroke-width="1"/>`;
-      svg+=`<text x="${PL-8}" y="${y+4}" text-anchor="end" font-size="10" fill="#6b7a99" font-family="IBM Plex Mono">$${(v/1000).toFixed(0)}k</text>`;
+      svg+=`<line x1="${PL}" y1="${y.toFixed(1)}" x2="${W-PR}" y2="${y.toFixed(1)}" stroke="#e2e6ed" stroke-width="1"/>`;
+      svg+=`<text x="${PL-8}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11" fill="#6b7a99" font-family="IBM Plex Mono">$${(v/1000).toFixed(0)}k</text>`;
     }
-    const jy=PT+cH-(jointCap/maxVal)*cH;
-    svg+=`<line x1="${PL}" y1="${jy}" x2="${W-PR}" y2="${jy}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="5,3"/>`;
-    svg+=`<text x="${W-PR+2}" y="${jy+4}" font-size="9" fill="#E53935" font-family="IBM Plex Sans">Joint Cap</text>`;
+    // Joint capacity reference line
+    const jy=PT+cH-(Math.min(jointCap,maxVal)/maxVal)*cH;
+    svg+=`<line x1="${PL}" y1="${jy.toFixed(1)}" x2="${W-PR}" y2="${jy.toFixed(1)}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="6,3"/>`;
+    svg+=`<text x="${W-PR+4}" y="${(jy+4).toFixed(1)}" font-size="10" fill="#E53935" font-family="IBM Plex Sans">Joint Cap</text>`;
+    // Bars and year labels
     years.forEach((yr,i)=>{
       const x=PL+i*(cW/n)+(cW/n-barW)/2;
       const h=Math.max(2,(totals[i]/maxVal)*cH);
       const y=PT+cH-h;
       const ms=pmYears[i]?.milestone;
       svg+=`<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${h.toFixed(1)}" fill="${ms?'#E67E22':'#00A99D'}" rx="2"><title>${yr}: ${fmt(totals[i])}${ms?' | ★ '+ms:''}</title></rect>`;
-      if(ms) svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#E67E22">★</text>`;
-      if(i%4===0||ms) svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${(PT+cH+15).toFixed(1)}" text-anchor="middle" font-size="9" fill="#6b7a99" transform="rotate(-40 ${(x+barW/2).toFixed(1)} ${(PT+cH+15).toFixed(1)})">${yr}</text>`;
+      if(ms) svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${(y-5).toFixed(1)}" text-anchor="middle" font-size="11" fill="#E67E22">★</text>`;
+      // Label every 5 years or on milestone years; rotate 45° for readability
+      if(i%5===0||ms) svg+=`<text x="${(x+barW/2).toFixed(1)}" y="${(PT+cH+14).toFixed(1)}" text-anchor="end" font-size="10" fill="#6b7a99" font-family="IBM Plex Mono" transform="rotate(-45 ${(x+barW/2).toFixed(1)} ${(PT+cH+14).toFixed(1)})">${yr}</text>`;
     });
+    // Axes
     svg+=`<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${PT+cH}" stroke="#1B2A4A" stroke-width="1.5"/>`;
     svg+=`<line x1="${PL}" y1="${PT+cH}" x2="${W-PR}" y2="${PT+cH}" stroke="#1B2A4A" stroke-width="1.5"/>`;
-    svg+=`<rect x="${PL}" y="${H-16}" width="12" height="10" fill="#00A99D" rx="2"/><text x="${PL+15}" y="${H-8}" font-size="10" fill="#333" font-family="IBM Plex Sans">Annual Premium</text>`;
-    svg+=`<rect x="${PL+130}" y="${H-16}" width="12" height="10" fill="#E67E22" rx="2"/><text x="${PL+145}" y="${H-8}" font-size="10" fill="#333" font-family="IBM Plex Sans">Milestone year</text>`;
-    svg+=`<line x1="${PL+270}" y1="${H-10}" x2="${PL+285}" y2="${H-10}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="4,2"/><text x="${PL+288}" y="${H-7}" font-size="10" fill="#E53935" font-family="IBM Plex Sans">Joint Capacity</text>`;
+    // Legend
+    const ly=H-18;
+    svg+=`<rect x="${PL}" y="${ly}" width="13" height="11" fill="#00A99D" rx="2"/><text x="${PL+17}" y="${ly+9}" font-size="11" fill="#333" font-family="IBM Plex Sans">Annual Premium</text>`;
+    svg+=`<rect x="${PL+145}" y="${ly}" width="13" height="11" fill="#E67E22" rx="2"/><text x="${PL+162}" y="${ly+9}" font-size="11" fill="#333" font-family="IBM Plex Sans">Milestone year</text>`;
+    svg+=`<line x1="${PL+300}" y1="${ly+5}" x2="${PL+318}" y2="${ly+5}" stroke="#E53935" stroke-width="1.5" stroke-dasharray="5,2"/><text x="${PL+322}" y="${ly+9}" font-size="11" fill="#E53935" font-family="IBM Plex Sans">Joint Capacity</text>`;
     svg+='</svg>';
     return svg;
   }
