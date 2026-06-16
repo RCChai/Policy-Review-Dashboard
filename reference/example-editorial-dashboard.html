@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jordan Lee Wei Han — Policy Review, June 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Archivo:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F7F3EC; --paper2:#F1ECE2; --card:#FBF8F2; --ink:#1F1B16; --ink2:#57503F;
+  --faint:#8B8270; --rule:#D9D1C0; --rule2:#C4BAA5;
+  --ox:#8A3324; --oxsoft:#B8634F;
+  --teal:#1F6F6B; --tealsoft:#5B9C97; --tealbg:#E4EDEA;
+  --gold:#C99A3F; --goldsoft:#E0C589; --goldbg:#F3EAD4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font:15px/1.65 "Archivo",sans-serif}
+.page{max-width:1020px;margin:0 auto;padding:0 36px}
+@media(max-width:640px){.page{padding:0 20px}}
+.serif{font-family:"Fraunces",serif}
+.num{font-family:"Spline Sans Mono",monospace;font-variant-numeric:tabular-nums}
+.caps{font-family:"Archivo",sans-serif;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}
+.oxc{color:var(--ox)}.tc{color:var(--teal)}.gc{color:var(--gold)}
+.drule{border-top:3px solid var(--ink);position:relative;margin-top:4px}
+.drule::after{content:"";display:block;border-top:1px solid var(--ink);margin-top:2px}
+
+/* masthead */
+.mast{padding:54px 0 0}
+.mast .topline{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-bottom:10px}
+.mast h1{font-family:"Fraunces",serif;font-weight:500;font-size:64px;line-height:1.02;letter-spacing:-.015em;margin:30px 0 0}
+@media(max-width:640px){.mast h1{font-size:42px}}
+.standfirst{font-family:"Fraunces",serif;font-style:italic;font-weight:400;font-size:21px;line-height:1.5;color:var(--ink2);max-width:48ch;margin:22px 0 30px}
+.mast .who{display:flex;flex-wrap:wrap;gap:6px 34px;padding:14px 0 40px;border-top:1px solid var(--rule);font-size:13px;color:var(--ink2)}
+.mast .who b{color:var(--ink);font-weight:600}
+
+/* nav — wraps, never scrolls */
+nav{position:sticky;top:0;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(6px);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);z-index:50}
+nav .page{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;justify-items:center;column-gap:36px;padding-top:0;padding-bottom:0}
+nav a{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);text-decoration:none;padding:11px 0 9px;border-bottom:2px solid transparent;white-space:nowrap}
+nav a.on{color:var(--ink);border-bottom-color:var(--ox)}
+nav a:hover{color:var(--ink)}
+@media(max-width:640px){nav .page{grid-template-columns:repeat(2,auto);column-gap:24px}}
+
+/* sections */
+section{padding:58px 0 8px}
+.snum{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ox);letter-spacing:.1em}
+h2{font-family:"Fraunces",serif;font-weight:500;font-size:34px;letter-spacing:-.01em;margin:6px 0 0}
+.lede{font-family:"Fraunces",serif;font-style:italic;font-size:17.5px;line-height:1.6;color:var(--ink2);max-width:62ch;margin:14px 0 30px}
+.lede .num{font-style:normal;font-size:15.5px}
+.subcap{margin:34px 0 14px}
+
+/* big figures */
+.figs{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:6px 0 26px}
+.fig{flex:1 1 200px;padding:18px 26px 20px 0;border-right:1px solid var(--rule)}
+.fig:last-child{border-right:0}.fig+.fig{padding-left:26px}
+.fig .v{font-family:"Fraunces",serif;font-weight:500;font-size:34px;letter-spacing:-.01em;margin-top:6px}
+.fig .v small{font-size:16px;color:var(--faint);font-weight:400}
+.fig .s{font-size:12.5px;color:var(--ink2);margin-top:3px}
+@media(max-width:760px){.fig{flex:1 1 46%;border-right:0;padding-left:0!important}}
+
+/* household */
+.person{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:18px;padding:20px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.person:first-of-type{border-top:1px solid var(--rule)}
+@media(max-width:700px){.person{grid-template-columns:1fr}}
+.person .nm{font-family:"Fraunces",serif;font-size:22px;font-weight:500}
+.person .rl{font-size:12.5px;color:var(--faint);margin-top:2px}
+.person .d{font-size:13.5px;color:var(--ink2)}.person .d b{color:var(--ink);font-weight:600}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+thead th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:500;text-align:right;padding:0 10px 8px;border-bottom:1px solid var(--ink)}
+thead th:first-child{text-align:left;padding-left:0}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:right;vertical-align:top}
+tbody td:first-child{text-align:left;padding-left:0}
+tbody tr.total td{border-top:1px solid var(--ink);border-bottom:none;font-weight:600;padding-top:11px}
+td .sub{display:block;font-size:11.5px;color:var(--faint);font-style:italic;margin-top:1px}
+.fn{font-size:12px;color:var(--ink2);line-height:1.6;margin-top:14px;max-width:76ch}
+.fn sup{color:var(--ox)}
+
+/* split bar */
+.split{margin:26px 0 8px}
+.split .bar{display:flex;height:34px;border:1px solid var(--ink)}
+.split .seg1{background:var(--ink)}
+.split .seg2{background:var(--teal)}
+.split .lab{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--ink2);margin-top:7px}
+.split .lab b{color:var(--ink)}.split .lab .k1{color:var(--ink)}.split .lab .k2{color:var(--teal)}
+
+/* coverage snapshot — structured cards */
+.snapgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:6px 0 8px}
+@media(max-width:820px){.snapgrid{grid-template-columns:1fr}}
+.snap{border:1px solid var(--rule);background:var(--card)}
+.snap .sh{background:var(--ink);color:var(--paper);padding:13px 16px}
+.snap.owner .sh{background:var(--teal)}
+.snap .sh .nm{font-family:"Fraunces",serif;font-size:18px;font-weight:500}
+.snap .sh .mt{font-size:11px;color:rgba(255,255,255,.72);margin-top:2px;letter-spacing:.02em}
+.crow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--rule);font-size:13px}
+.crow:last-child{border-bottom:0}
+.crow .l{color:var(--ink2)}
+.crow .v{font-family:"Spline Sans Mono",monospace;font-weight:500}
+.crow .v.met{color:var(--teal)}.crow .v.short{color:var(--ox)}
+.crow .hs{font-size:12px;color:var(--teal);text-align:right;font-weight:500}
+.tag{font-size:10px;letter-spacing:.04em;padding:2px 7px;border-radius:2px;font-family:"Archivo",sans-serif}
+.tag.sup{background:var(--goldbg);color:#8a6a1f}
+
+/* needs cards */
+.needs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}
+@media(max-width:820px){.needs{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.needs{grid-template-columns:1fr}}
+.ncard{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--teal);padding:15px 16px}
+.ncard.short{border-top-color:var(--ox)}
+.ncard h4{font-family:"Fraunces",serif;font-size:16px;font-weight:500}
+.ncard h4 small{font-family:"Archivo";font-size:11px;color:var(--faint);font-weight:400}
+.nr{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--ink2)}
+.nr b{font-family:"Spline Sans Mono",monospace;font-weight:500;color:var(--ink)}
+.nr .pos{color:var(--teal)}.nr .neg{color:var(--ox)}
+.pbar{height:4px;background:var(--paper2);border:1px solid var(--rule);margin:9px 0 7px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--teal)}
+.pbar i.o{background:var(--ox)}
+.nbadge{display:inline-block;font-size:10.5px;letter-spacing:.05em;padding:3px 9px;border-radius:2px}
+.nbadge.ok{background:var(--tealbg);color:var(--teal)}
+.nbadge.no{background:#F4E2DC;color:var(--ox)}
+.nbasis{font-size:11px;color:var(--faint);font-style:italic;margin-top:8px;line-height:1.5}
+
+/* charts */
+.chart{margin:10px 0 6px}.chart svg{width:100%;height:auto;display:block}
+.chartcap{font-size:12px;color:var(--ink2);font-style:italic;max-width:74ch;margin:10px 0 0}
+svg text{font-family:"Archivo",sans-serif}svg .tnum{font-family:"Spline Sans Mono",monospace}
+
+/* schedule index */
+.sched{columns:2;column-gap:54px;margin-top:8px}
+@media(max-width:700px){.sched{columns:1}}
+.sched .row{display:flex;gap:14px;padding:7px 0;border-bottom:1px solid var(--rule);break-inside:avoid;font-size:13.5px}
+.sched .yr{font-family:"Spline Sans Mono",monospace;color:var(--ox);min-width:46px}
+.sched .what{flex:1;color:var(--ink2)}
+.sched .amt{font-family:"Spline Sans Mono",monospace;white-space:nowrap}
+
+/* wealth/payout mini-figs */
+.mini{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:6px 0 22px}
+.mini .m{flex:1 1 150px;padding:14px 22px 16px 0;border-right:1px solid var(--rule)}
+.mini .m:last-child{border-right:0}.mini .m+.m{padding-left:22px}
+.mini .v{font-family:"Fraunces",serif;font-weight:500;font-size:27px;margin-top:4px}
+.mini .s{font-size:12px;color:var(--ink2);margin-top:2px}
+@media(max-width:760px){.mini .m{flex:1 1 45%;border-right:0;padding-left:0!important}}
+
+/* notes */
+.notes{counter-reset:n;max-width:76ch}
+.note{counter-increment:n;display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--rule)}
+.note::before{content:counter(n,decimal-leading-zero);font-family:"Spline Sans Mono",monospace;font-size:13px;color:var(--ox);padding-top:2px}
+.note p{font-size:14.5px;line-height:1.62;color:var(--ink2)}.note b{color:var(--ink);font-weight:600}
+.note.flag::before{color:var(--gold)}
+
+/* policy register — bubble accordion */
+.acc{margin-bottom:14px;border:1px solid var(--rule)}
+.acc-head{display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:var(--paper);padding:13px 18px;cursor:pointer;user-select:none}
+.acc.owner .acc-head{background:var(--teal)}
+.acc-head h3{font-family:"Fraunces",serif;font-weight:500;font-size:18px}
+.acc-head .s3{font-size:11px;color:rgba(255,255,255,.72);margin-top:2px}
+.acc-head .arr{font-size:11px;letter-spacing:.1em;transition:transform .2s}
+.acc.open .acc-head .arr{transform:rotate(180deg)}
+.acc-body{display:none;padding:16px;background:var(--paper2)}
+.acc.open .acc-body{display:block}
+.polgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+@media(max-width:760px){.polgrid{grid-template-columns:1fr}}
+.pol{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--teal);padding:14px 16px;font-size:12.5px;position:relative}
+.pol.wealth{border-left-color:var(--gold)}
+.pol .ptop{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px;padding-right:60px}
+.pchip{font-size:10px;letter-spacing:.03em;padding:2px 7px;border-radius:2px;background:var(--paper2);color:var(--ink2);border:1px solid var(--rule)}
+.pchip.ins{background:var(--tealbg);color:var(--teal);border-color:transparent}
+.pchip.cpf{background:var(--goldbg);color:#8a6a1f;border-color:transparent}
+.pstatus{position:absolute;top:13px;right:14px;font-size:10px;letter-spacing:.05em;color:var(--teal)}
+.pol h4{font-family:"Fraunces",serif;font-size:15.5px;font-weight:500;line-height:1.25}
+.pol .pno{font-family:"Spline Sans Mono",monospace;font-size:10.5px;color:var(--faint);margin:2px 0 8px}
+.pol .psec{border-top:1px solid var(--rule);margin-top:8px;padding-top:8px}
+.prow{display:flex;justify-content:space-between;padding:2.5px 0}
+.prow .l{color:var(--ink2)}.prow .v{font-family:"Spline Sans Mono",monospace;font-weight:500}
+.pol .riders{font-size:11.5px;margin-top:8px;color:var(--ink2)}.pol .riders b{font-weight:600;color:var(--ink)}
+.pol .rem{font-size:11.5px;font-style:italic;color:var(--faint);margin-top:6px;line-height:1.5}
+
+footer{margin-top:70px;padding:26px 0 60px;border-top:1px solid var(--rule)}
+footer .drule{margin-bottom:18px}
+footer p{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);text-align:center}
+.tip{position:fixed;background:var(--ink);color:var(--paper);font-size:12px;line-height:1.55;padding:9px 13px;pointer-events:none;display:none;z-index:90;max-width:280px}
+.tip .num{color:var(--goldsoft)}
+#printbtn{position:fixed;top:12px;right:16px;z-index:60;background:var(--ink);color:var(--paper);border:0;padding:8px 14px;font:600 11px "Archivo";letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+@media print{nav,.tip,#printbtn{display:none}body{background:#fff}section{padding:30px 0 0;break-inside:avoid-page}.acc-body{display:block!important}}
+</style>
+</head>
+<body>
+<button id="printbtn" onclick="window.print()">Print / PDF</button>
+
+<!-- MASTHEAD -->
+<header class="mast"><div class="page">
+  <div class="drule"></div>
+  <div class="topline" style="margin-top:10px">
+    <span class="caps">Client Policy Review · June 2026</span>
+    <span class="caps">Strictly confidential</span>
+  </div>
+  <h1>Jordan Lee Wei Han<span class="oxc">.</span></h1>
+  <p class="standfirst">Sixteen active policies across one household — what they cost,
+  what they cover, where it is paid from, and what they may one day return. Figures
+  drawn from the consolidation workbook, in Singapore dollars.</p>
+  <div class="who">
+    <span>Age <b>30</b></span>
+    <span>Occupation <b>Operations Specialist</b></span>
+    <span>Income <b class="num">S$5,800</b> /mo</span>
+    <span>Expenses <b class="num">S$2,000</b> /mo</span>
+    <span>Liabilities <b class="num">S$0</b></span>
+    <span>Joint top-up <b class="num">S$36,000</b> /yr</span>
+  </div>
+</div></header>
+
+<nav><div class="page">
+  <a href="#household">The household</a>
+  <a href="#cost">Where the money goes</a>
+  <a href="#cover">What is covered</a>
+  <a href="#age">Cover over time</a>
+  <a href="#runway">The premium runway</a>
+  <a href="#wealth">Wealth &amp; payouts</a>
+  <a href="#notes">Notes &amp; actions</a>
+  <a href="#register">Policy register</a>
+</div></nav>
+
+<main>
+
+<!-- 01 HOUSEHOLD -->
+<section id="household"><div class="page">
+  <span class="snum">01</span>
+  <h2>The household</h2>
+  <p class="lede">One policy owner and two young daughters. Every policy in this review is
+  owned and paid for by Jordan; the children's plans are funded through a dedicated
+  joint account set aside for their planning.</p>
+
+  <div class="person">
+    <div><div class="nm">Jordan Lee Wei Han</div><div class="rl">Policy owner · b. 02&nbsp;Feb&nbsp;1995</div></div>
+    <div class="d">Age <b>30</b> · Married · Non-smoker</div>
+    <div class="d">Life insured on <b>8</b> policies</div>
+  </div>
+  <div class="person">
+    <div><div class="nm">Emma Lee Xin Yi</div><div class="rl">Daughter · b. 10&nbsp;Oct&nbsp;2023</div></div>
+    <div class="d">Age <b>2</b></div>
+    <div class="d">Life insured on <b>4</b> policies</div>
+  </div>
+  <div class="person">
+    <div><div class="nm">Olivia Lee Xin Hui</div><div class="rl">Daughter · b. 05&nbsp;May&nbsp;2025</div></div>
+    <div class="d">Age <b>1</b></div>
+    <div class="d">Life insured on <b>4</b> policies</div>
+  </div>
+
+  <p class="fn" style="margin-top:18px">The <b>Joint Bank Account (Children Planning)</b> holds
+  <span class="num">S$15,000</span> and receives <span class="num">S$3,000</span> a month —
+  <span class="num">S$36,000</span> a year. It is the funding source for ten of the sixteen policies.</p>
+</div></section>
+
+<!-- 02 COST -->
+<section id="cost"><div class="page">
+  <span class="snum">02</span>
+  <h2>Where the money goes</h2>
+  <p class="lede">Premiums across the household total <span class="num">S$71,374</span> a year —
+  just over Jordan's entire income. The plan only works because the joint account carries
+  about half the load, and it is running close to its limit.</p>
+
+  <div class="figs">
+    <div class="fig"><span class="caps">Annual premiums</span><div class="v num">S$71,374</div><div class="s">S$5,948 a month</div></div>
+    <div class="fig"><span class="caps">Against own income</span><div class="v">102<small>%</small></div><div class="s">of S$69,600 yearly income</div></div>
+    <div class="fig"><span class="caps">Paid to date</span><div class="v num">S$89,251</div><div class="s">across all sixteen policies</div></div>
+    <div class="fig"><span class="caps">Joint headroom</span><div class="v num oxc">S$1,051</div><div class="s">left of S$36,000 yearly capacity</div></div>
+  </div>
+
+  <table>
+    <thead><tr><th>Premiums by purpose</th><th>Yearly</th><th>Monthly</th><th>Share of income</th><th>Guideline</th></tr></thead>
+    <tbody>
+      <tr><td>Protection — keeping the family safe</td><td class="num">S$10,841</td><td class="num">S$903</td><td class="num tc">15.6%</td><td>within the 20% ceiling</td></tr>
+      <tr><td>Wealth accumulation — building the future</td><td class="num">S$60,534</td><td class="num">S$5,044</td><td class="num">87.0%<sup>†</sup></td><td>guideline is 30%+</td></tr>
+      <tr class="total"><td>All premiums</td><td class="num">S$71,374</td><td class="num">S$5,948</td><td class="num">102.5%</td><td>—</td></tr>
+    </tbody>
+  </table>
+  <p class="fn"><sup>†</sup>&nbsp;Far above the savings guideline by design — the three regular ILPs
+  (<span class="num">S$40,534</span> a year combined) are deliberate front-loaded wealth building for the
+  daughters, paid largely from the joint account rather than monthly salary. A fourth ILP, Manulink
+  Investor, was a single CPF-OA premium already settled.</p>
+
+  <div class="split">
+    <span class="caps">Who pays — yearly split</span>
+    <div class="bar">
+      <div class="seg1" style="width:51%"></div>
+      <div class="seg2" style="width:49%"></div>
+    </div>
+    <div class="lab">
+      <span><b class="k1">From self</b> · <span class="num">S$36,426</span> — 52.3% of own income</span>
+      <span><b class="k2">From joint account</b> · <span class="num">S$34,949</span> — 97.1% of its capacity</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- 03 COVERAGE -->
+<section id="cover"><div class="page">
+  <span class="snum">03</span>
+  <h2>What is covered</h2>
+  <p class="lede">Measured against the needs calculator, every protection benchmark is met — critical illness
+  read as a whole, with early-CI as the subset within it. The structured view below shows each life insured at
+  a glance, then the calculator behind the verdict.</p>
+
+  <div class="caps subcap" style="margin-top:0">Coverage snapshot — by insured</div>
+  <div class="snapgrid">
+    <div class="snap owner">
+      <div class="sh"><div class="nm">Jordan Lee Wei Han</div><div class="mt">Age 30 · policy owner · 8 policies</div></div>
+      <div class="crow"><span class="l">Sum assured (base)</span><span class="v">S$1,100,000</span></div>
+      <div class="crow"><span class="l">Death benefit</span><span class="v met">S$1,300,000</span></div>
+      <div class="crow"><span class="l">Total &amp; permanent disability</span><span class="v met">S$1,300,000</span></div>
+      <div class="crow"><span class="l">Critical illness (total)</span><span class="v met">S$562,000</span></div>
+      <div class="crow"><span class="l">&nbsp;&nbsp;└ Of which is Early CI</span><span class="v">S$250,000</span></div>
+      <div class="crow"><span class="l">Accidental death <span class="tag sup">supplementary</span></span><span class="v">S$200,000</span></div>
+      <div class="crow"><span class="l">Hospital &amp; surgical</span><span class="hs">Supreme Health P&nbsp;Plus + TotalCare P&nbsp;Optimum</span></div>
+    </div>
+    <div class="snap">
+      <div class="sh"><div class="nm">Emma Lee Xin Yi</div><div class="mt">Age 2 · child · 4 policies · joint-funded</div></div>
+      <div class="crow"><span class="l">Sum assured (base)</span><span class="v">S$50,000</span></div>
+      <div class="crow"><span class="l">Death benefit</span><span class="v met">S$250,000</span></div>
+      <div class="crow"><span class="l">Total &amp; permanent disability</span><span class="v met">S$250,000</span></div>
+      <div class="crow"><span class="l">Critical illness (total)</span><span class="v met">S$250,000</span></div>
+      <div class="crow"><span class="l">&nbsp;&nbsp;└ Of which is Early CI</span><span class="v">S$250,000</span></div>
+      <div class="crow"><span class="l">Accidental death <span class="tag sup">supplementary</span></span><span class="v">S$100,000</span></div>
+      <div class="crow"><span class="l">Hospital &amp; surgical</span><span class="hs">Enhanced IncomeShield Preferred</span></div>
+    </div>
+    <div class="snap">
+      <div class="sh"><div class="nm">Olivia Lee Xin Hui</div><div class="mt">Age 1 · child · 4 policies · joint-funded</div></div>
+      <div class="crow"><span class="l">Sum assured (base)</span><span class="v">S$50,000</span></div>
+      <div class="crow"><span class="l">Death benefit</span><span class="v met">S$250,000</span></div>
+      <div class="crow"><span class="l">Total &amp; permanent disability</span><span class="v met">S$250,000</span></div>
+      <div class="crow"><span class="l">Critical illness (total)</span><span class="v met">S$250,000</span></div>
+      <div class="crow"><span class="l">&nbsp;&nbsp;└ Of which is Early CI</span><span class="v">S$250,000</span></div>
+      <div class="crow"><span class="l">Accidental death <span class="tag sup">supplementary</span></span><span class="v">S$100,000</span></div>
+      <div class="crow"><span class="l">Hospital &amp; surgical</span><span class="hs">Enhanced IncomeShield Preferred</span></div>
+    </div>
+  </div>
+
+  <div class="caps subcap">Coverage needs calculator — Jordan Lee Wei Han</div>
+  <div class="needs">
+    <div class="ncard">
+      <h4>Death</h4>
+      <div class="nr"><span>Recommended</span><b>S$548,000</b></div>
+      <div class="nr"><span>Currently have</span><b>S$1,300,000</b></div>
+      <div class="pbar"><i style="width:100%"></i></div>
+      <div class="nr"><span>Surplus</span><b class="pos">+S$752,000</b></div>
+      <span class="nbadge ok">✓ Met</span>
+      <div class="nbasis">5× yearly income + S$200k add-on</div>
+    </div>
+    <div class="ncard">
+      <h4>TPD</h4>
+      <div class="nr"><span>Recommended</span><b>S$548,000</b></div>
+      <div class="nr"><span>Currently have</span><b>S$1,300,000</b></div>
+      <div class="pbar"><i style="width:100%"></i></div>
+      <div class="nr"><span>Surplus</span><b class="pos">+S$752,000</b></div>
+      <span class="nbadge ok">✓ Met</span>
+      <div class="nbasis">5× yearly income + S$200k add-on</div>
+    </div>
+    <div class="ncard">
+      <h4>ECI <small>subset of CI</small></h4>
+      <div class="nr"><span>Recommended</span><b>S$189,000</b></div>
+      <div class="nr"><span>Currently have</span><b>S$250,000</b></div>
+      <div class="pbar"><i style="width:100%"></i></div>
+      <div class="nr"><span>Surplus</span><b class="pos">+S$61,000</b></div>
+      <span class="nbadge ok">✓ Met</span>
+      <div class="nbasis">2× yearly income + S$50k add-on. Early CI is the early-stage subset within the CI total above.</div>
+    </div>
+    <div class="ncard">
+      <h4>CI <small>total, incl. early CI</small></h4>
+      <div class="nr"><span>Recommended</span><b>S$548,000</b></div>
+      <div class="nr"><span>Currently have</span><b>S$562,000</b></div>
+      <div class="pbar"><i style="width:100%"></i></div>
+      <div class="nr"><span>Surplus</span><b class="pos">+S$14,000</b></div>
+      <span class="nbadge ok">✓ Met</span>
+      <div class="nbasis">CI is the whole; early CI is the subset within it. Total held S$562,000 — late-stage CI S$312k + early CI S$250k.</div>
+    </div>
+  </div>
+
+  <div class="caps subcap">Benchmark detail</div>
+  <table>
+    <thead><tr><th>Benefit</th><th>Jordan</th><th>Recommended<sup>‡</sup></th><th>Emma</th><th>Olivia</th></tr></thead>
+    <tbody>
+      <tr><td>Death</td><td class="num">S$1,300,000</td><td class="num">S$548,000</td><td class="num">S$250,000<sup>§</sup></td><td class="num">S$250,000<sup>§</sup></td></tr>
+      <tr><td>Total &amp; permanent disability</td><td class="num">S$1,300,000</td><td class="num">S$548,000</td><td class="num">S$250,000<sup>§</sup></td><td class="num">S$250,000<sup>§</sup></td></tr>
+      <tr><td>Critical illness <span class="sub">total cover</span></td><td class="num tc"><b>S$562,000</b></td><td class="num">S$548,000</td><td class="num">S$250,000<sup>§</sup></td><td class="num">S$250,000<sup>§</sup></td></tr>
+      <tr><td>&nbsp;&nbsp;└ Of which is Early CI <span class="sub">subset</span></td><td class="num">S$250,000</td><td class="num">S$189,000</td><td class="num">S$250,000<sup>§</sup></td><td class="num">S$250,000<sup>§</sup></td></tr>
+      <tr><td>Accidental death <span class="sub">supplementary — pays only on accident</span></td><td class="num">S$200,000</td><td>—</td><td class="num">S$100,000</td><td class="num">S$100,000</td></tr>
+      <tr><td>Hospital &amp; surgical</td><td>Supreme Health P&nbsp;Plus<br>+ TotalCare P&nbsp;Optimum</td><td>—</td><td>Enhanced IncomeShield<br>Preferred</td><td>Enhanced IncomeShield<br>Preferred</td></tr>
+    </tbody>
+  </table>
+  <p class="fn">
+    <sup>‡</sup>&nbsp;Recommended levels from the workbook's needs calculator: five times yearly income
+    (S$69,600) plus a S$200,000 add-on for death, TPD and CI; twice income plus S$50,000 for early CI.
+    Critical illness is read as a whole — early CI is the subset within it, not an extra layer. Total CI cover
+    of S$562,000 sits <b class="tc">S$14,000 over</b> the benchmark; the late-stage portion alone is S$312,000.<br>
+    <sup>§</sup>&nbsp;The daughters' figures are a 5× multiplier on a S$50,000 base sum assured, in force
+    until each turns 80, after which cover reverts to the base amount.
+  </p>
+</div></section>
+
+<!-- 04 OVER TIME -->
+<section id="age"><div class="page">
+  <span class="snum">04</span>
+  <h2>How cover changes with age</h2>
+  <p class="lede">Protection is not static. Two of Jordan's term plans fall away at ages 70 and 85,
+  and the daughters' multipliers expire at 80. Nothing lapses in the next decade — these are
+  long-horizon transitions, mapped here so they never surprise.</p>
+
+  <div class="caps" style="margin-bottom:6px">Jordan Lee Wei Han · age 30 → 100</div>
+  <div class="chart" id="c-syt"></div>
+  <p class="chartcap">At <b>70</b>, Elite Term (II) — the S$1m backbone — matures. At <b>80</b> the 5×
+  multiplier expires, stepping death, TPD and critical illness toward the base. At <b>85</b>, Family Care
+  ends. A whole-of-life base of S$50,000 (LifeReady 20) then continues for life. Critical-illness cover
+  always sits at or above early-CI — early-CI is the early-stage subset of it, not a separate layer.</p>
+
+  <div class="caps" style="margin:38px 0 6px">Each daughter · to age 100</div>
+  <div class="chart" id="c-kids"></div>
+  <p class="chartcap">Both daughters carry the same shape of protection: S$250,000 across death, disability and
+  both critical-illness covers until age <b>80</b>, then S$50,000 base cover for life — Emma through
+  LifeReady Plus (II), Olivia through Complete Life Secure.</p>
+</div></section>
+
+<!-- 05 RUNWAY -->
+<section id="runway"><div class="page">
+  <span class="snum">05</span>
+  <h2>The premium runway</h2>
+  <p class="lede">The heavy years are now. Cash premiums run at <span class="num">S$51,374</span> a year
+  until 2034, then fall away in steps as each plan completes — by 2036 the bill is roughly a fifth of
+  today's. Lifetime cash outlay from here: <span class="num">S$806,701</span>.</p>
+
+  <div class="chart" id="c-pay"></div>
+  <p class="chartcap">Cash premiums only, 2026–2120, per the workbook's projection. The cash portions of the
+  Integrated Shield and accident plans run for life and form the long tail; Medisave-funded portions sit
+  outside this curve. The joint account's S$36,000 yearly capacity is marked — today's projection leaves
+  just S$1,051 of slack.</p>
+
+  <div style="margin-top:34px">
+    <span class="caps">Completion schedule — what finishes paying, and the bill that remains</span>
+    <div class="sched" style="margin-top:10px">
+      <div class="row"><span class="yr">2034</span><span class="what">Invest Flex · InvestReady (III)</span><span class="amt">→ S$23,199/yr</span></div>
+      <div class="row"><span class="yr">2035</span><span class="what">Invest Flex Vantage</span><span class="amt">→ S$10,841/yr</span></div>
+      <div class="row"><span class="yr">2043</span><span class="what">LifeReady Plus (II) 20</span><span class="amt">→ S$7,371/yr</span></div>
+      <div class="row"><span class="yr">2048</span><span class="what">LifeReady Plus (II) 25 Years</span><span class="amt">→ S$5,757/yr</span></div>
+      <div class="row"><span class="yr">2050</span><span class="what">Complete Life Secure</span><span class="amt">→ S$4,084/yr</span></div>
+      <div class="row"><span class="yr">2065</span><span class="what">Elite Term (II)</span><span class="amt">→ S$3,182/yr</span></div>
+      <div class="row"><span class="yr">2080</span><span class="what">Family Care</span><span class="amt">→ S$2,985/yr</span></div>
+      <div class="row"><span class="yr">2094</span><span class="what">ReadyProtect Advantage</span><span class="amt">→ S$2,676/yr</span></div>
+      <div class="row"><span class="yr">2095</span><span class="what">Supreme Health · TotalCare</span><span class="amt">→ S$1,303/yr</span></div>
+    </div>
+  </div>
+</div></section>
+
+<!-- 06 WEALTH & PAYOUTS -->
+<section id="wealth"><div class="page">
+  <span class="snum">06</span>
+  <h2>Wealth &amp; payouts</h2>
+  <p class="lede">Four investment-linked plans build the family's future. Read as a cash exercise —
+  wealth premiums in, against coupons and projected maturity out — the portfolio returns
+  <span class="num">S$1.37m</span> on <span class="num">S$377k</span> of cash, an internal rate of
+  <span class="num">13.4%</span>. All figures are non-guaranteed projections.</p>
+
+  <div class="mini">
+    <div class="m"><span class="caps">Projected maturity</span><div class="v num">S$400,000</div><div class="s">at age 65, non-guaranteed</div></div>
+    <div class="m"><span class="caps">Coupons / dividends</span><div class="v num">S$27,600</div><div class="s">a year, currently reinvested</div></div>
+    <div class="m"><span class="caps">Lifetime inflow</span><div class="v num">S$1,366,000</div><div class="s">coupons + maturity</div></div>
+    <div class="m"><span class="caps">Return on cash</span><div class="v tc">3.6×<span style="font-size:15px"> · 13.4%&nbsp;IRR</span></div><div class="s">vs S$377k wealth premiums</div></div>
+  </div>
+
+  <div class="caps subcap" style="margin-top:8px">Maturity schedule — per plan</div>
+  <table>
+    <thead><tr><th>Plan · insured</th><th>Yearly premium</th><th>Finishes</th><th>Guaranteed</th><th>Non-guaranteed</th></tr></thead>
+    <tbody>
+      <tr><td>Invest Flex <span class="sub">Jordan · Income Insurance</span></td><td class="num">S$10,175</td><td class="num">2034</td><td class="num">S$0</td><td class="num tc">S$100,000</td></tr>
+      <tr><td>Invest Flex Vantage <span class="sub">Olivia · Income Insurance</span></td><td class="num">S$12,359</td><td class="num">2035</td><td class="num">S$0</td><td class="num tc">S$120,000</td></tr>
+      <tr><td>InvestReady (III) 13Y Flexi 10 <span class="sub">Emma · Manulife</span></td><td class="num">S$18,000</td><td class="num">2034</td><td class="num">S$0</td><td class="num tc">S$180,000</td></tr>
+      <tr><td>Manulink Investor (II) CPF-OA <span class="sub">Jordan · Manulife · single premium</span></td><td class="num">—</td><td>fully paid</td><td class="num">—</td><td><i style="color:#8a6a1f">illustration pending</i></td></tr>
+      <tr class="total"><td>Total (cash-funded plans)</td><td class="num">S$40,534</td><td></td><td class="num">S$0</td><td class="num">S$400,000</td></tr>
+    </tbody>
+  </table>
+  <p class="fn">Guaranteed value is S$0 for investment-linked plans by nature — returns depend on fund
+  performance. Manulink Investor is CPF-OA funded and sits outside the cash payout analysis.</p>
+
+  <div class="caps subcap">Payout milestone — coupons, then maturity</div>
+  <div class="chart" id="c-payout"></div>
+  <p class="chartcap">Projected coupons of S$27,600 a year accumulate from now, with a S$400,000 maturity lump
+  at 2060 (age 65). Coupons are currently reinvested rather than drawn.</p>
+
+  <div class="caps subcap">Cumulative payout — by decade, to the final maturity</div>
+  <table>
+    <thead><tr><th>By year</th><th>Coupons to date</th><th>Maturity received</th><th>Cumulative payout</th></tr></thead>
+    <tbody>
+      <tr><td>2030</td><td class="num">S$138,000</td><td>—</td><td class="num">S$138,000</td></tr>
+      <tr><td>2040</td><td class="num">S$414,000</td><td>—</td><td class="num">S$414,000</td></tr>
+      <tr><td>2050</td><td class="num">S$690,000</td><td>—</td><td class="num">S$690,000</td></tr>
+      <tr class="total"><td>2060 · final maturity</td><td class="num">S$966,000</td><td class="num tc">S$400,000</td><td class="num">S$1,366,000</td></tr>
+    </tbody>
+  </table>
+  <p class="fn">Coupons of S$27,600 a year accumulate from 2026; the S$400,000 maturity lands in 2060 (the last
+  maturing plan). Cumulative payout then reaches S$1.37m — coupons S$966,000 plus the S$400,000 maturity.</p>
+
+  <div class="caps subcap">Passive income — if coupons are switched on</div>
+  <div class="chart" id="c-pi"></div>
+  <p class="chartcap">Were the dividends drawn instead of reinvested, monthly passive income would begin at age
+  <b>39</b> (S$1,600) and reach <b>S$2,300 a month</b> from age 40 — S$550 from Invest Flex, S$700 from
+  Invest Flex Vantage, S$1,050 from InvestReady. Non-guaranteed; subject to fund performance.</p>
+</div></section>
+
+<!-- 07 NOTES -->
+<section id="notes"><div class="page">
+  <span class="snum">07</span>
+  <h2>Notes &amp; actions</h2>
+  <p class="lede">Seven things worth attending to, in rough order of importance.</p>
+  <div class="notes">
+    <div class="note"><p><b>Critical illness now meets the benchmark.</b> Read as a whole — early CI being the
+    subset within it — total CI cover is S$562,000 against the S$548,000 benchmark, a S$14,000 surplus. The
+    late-stage portion alone is S$312,000. Data is kept per illustration, with CI and early-CI in separate columns.</p></div>
+    <div class="note"><p><b>Watch the joint account.</b> S$34,949 of its S$36,000 yearly top-up is already
+    committed — 97% utilised, S$1,051 of slack. One more joint-funded policy would tip it past capacity.</p></div>
+    <div class="note"><p><b>Premiums exceed income by design — keep it deliberate.</b> Total premiums equal
+    102% of yearly income, with wealth plans at 87%. Sustainable only while the joint-account contribution
+    holds; revisit if circumstances change.</p></div>
+    <div class="note"><p><b>Obtain the Manulink illustration.</b> Three of four ILPs have projected maturity
+    values on file; Manulink Investor (CPF-OA) does not, so its share of the wealth picture can't yet be measured.</p></div>
+    <div class="note"><p><b>Nominate beneficiaries.</b> Only LifeReady 20 records nominations (Lee Wei Kang 50%,
+    Emma 50%). The rest of the register has none documented.</p></div>
+    <div class="note flag"><p><b>Complete Elite Term's record.</b> The S$1m Elite Term (II) has no policy number
+    yet — to be captured at the next meeting. Source is now set to Self.</p></div>
+    <div class="note"><p><b>Diary the long-horizon cliffs.</b> Elite Term (II) ends at age 70 and the daughters'
+    5× multipliers at 80 — far off, but each is a six-figure drop in cover worth a review when nearer.
+    Emma's Child Care Benefit also lapses at her age 25 (2048).</p></div>
+  </div>
+</div></section>
+
+<!-- 08 REGISTER -->
+<section id="register"><div class="page">
+  <span class="snum">Appendix</span>
+  <h2>Policy register</h2>
+  <p class="lede">All sixteen policies, grouped by life insured — tap a name to open. Every policy is
+  active and owned by Jordan Lee Wei Han. Teal edge = protection · gold edge = wealth accumulation.</p>
+
+  <div class="acc owner open">
+    <div class="acc-head" onclick="this.parentNode.classList.toggle('open')">
+      <div><h3>Jordan Lee Wei Han</h3><div class="s3">Age 30 · policy owner · 8 policies</div></div>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-body"><div class="polgrid">
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Singlife</span><span class="pchip">Term life</span></div>
+        <h4>Elite Term (II)</h4><div class="pno">no. not recorded</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$902.55</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2065</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Death / TPD</span><span class="v">S$1,000,000</span></div>
+        <div class="prow"><span class="l">Critical illness</span><span class="v">S$262,000</span></div></div>
+        <div class="rem">Cover until children are financially independent, then for future liabilities. To age 70.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Manulife</span><span class="pchip">Whole life</span></div>
+        <h4>LifeReady Plus (II) 20</h4><div class="pno">no. •••• 9396</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$3,469.86</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2043</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Base sum assured</span><span class="v">S$50,000</span></div>
+        <div class="prow"><span class="l">Death / TPD (5×)</span><span class="v">S$250,000</span></div>
+        <div class="prow"><span class="l">Early CI</span><span class="v">S$250,000</span></div>
+        <div class="prow"><span class="l">Multiplier ends</span><span class="v">age 80</span></div></div>
+        <div class="riders"><b>Riders:</b> Life Benefit Multiplier (III) 5×; Early Critical Care Rider (III)</div>
+        <div class="rem">Beneficiaries: Lee Wei Kang 50%, Emma 50%.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Great Eastern</span><span class="pchip">Term life</span></div>
+        <h4>Family Care</h4><div class="pno">no. •••• 8939</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$196.50</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2080</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Death / TPD / CI</span><span class="v">S$50,000</span></div></div>
+        <div class="rem">Cover to age 85; free child cover at 25% of sum insured; 53 CI conditions; 25 juvenile conditions to age 25.</div>
+      </div>
+      <div class="pol wealth"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Income Insurance</span><span class="pchip">ILP</span></div>
+        <h4>Invest Flex</h4><div class="pno">no. •••• 1640</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$10,175.00</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2034</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self</span></div>
+        <div class="prow"><span class="l">Projected maturity</span><span class="v tc">S$100,000</span></div></div>
+        <div class="riders"><b>Riders:</b> Dread Disease Premium Waiver</div>
+        <div class="rem">Income Global Growth Equity (Fundsmith). MIP15; premium holiday usable from year 6; dividends reinvested.</div>
+      </div>
+      <div class="pol wealth"><span class="pstatus">Fully paid</span>
+        <div class="ptop"><span class="pchip ins">Manulife</span><span class="pchip">ILP</span><span class="pchip cpf">CPF-OA</span></div>
+        <h4>Manulink Investor (II)</h4><div class="pno">no. •••• 5866</div>
+        <div class="psec"><div class="prow"><span class="l">Premium</span><span class="v">single S$20,000</span></div>
+        <div class="prow"><span class="l">Status</span><span class="v">fully paid 2024</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">CPF-OA</span></div>
+        <div class="prow"><span class="l">Projected maturity</span><span class="v" style="color:#8a6a1f">pending</span></div></div>
+        <div class="rem">Single CPF-OA premium; outside the cash payout analysis.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Great Eastern</span><span class="pchip">H&amp;S</span><span class="pchip cpf">Medisave</span></div>
+        <h4>Supreme Health P Plus</h4><div class="pno">no. •••• 2650</div>
+        <div class="psec"><div class="prow"><span class="l">Cash premium</span><span class="v">S$331.11</span></div>
+        <div class="prow"><span class="l">Medisave portion</span><span class="v">S$803.00</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2095</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self + CPF</span></div></div>
+        <div class="rem">Private hospital ward; pre-hospitalisation 120 days. Medisave portion sits outside the cash runway.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Great Eastern</span><span class="pchip">H&amp;S rider</span></div>
+        <h4>TotalCare P Optimum</h4><div class="pno">no. •••• 1289</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$1,041.81</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2095</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self (cash)</span></div></div>
+        <div class="riders"><b>Riders:</b> TotalCare Plus (Essential)</div>
+        <div class="rem">Overseas treatment; 5% co-insurance; post-hospitalisation 180 days. 100% cash, not Medisave-payable.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Manulife</span><span class="pchip">Accident</span></div>
+        <h4>ReadyProtect — Advantage</h4><div class="pno">no. •••• 1750</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$308.70</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2094</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Self</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Accidental death</span><span class="v">S$200,000</span></div></div>
+        <div class="riders"><b>Riders:</b> Hospital Cash Benefit</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head" onclick="this.parentNode.classList.toggle('open')">
+      <div><h3>Emma Lee Xin Yi</h3><div class="s3">Age 2 · child · 4 policies · funded via joint account</div></div>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-body"><div class="polgrid">
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Manulife</span><span class="pchip">Whole life</span></div>
+        <h4>LifeReady Plus (II) 25 Years</h4><div class="pno">no. •••• 8763</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$1,614.22</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2048</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint acct</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Base sum assured</span><span class="v">S$50,000</span></div>
+        <div class="prow"><span class="l">Death / TPD / CI / ECI (5×)</span><span class="v">S$250,000</span></div>
+        <div class="prow"><span class="l">Multiplier ends</span><span class="v">age 80</span></div></div>
+        <div class="riders"><b>Riders:</b> Payor Benefit Plus (II) ×2; Early Critical Care (III); Life Benefit Multiplier (III) 5×</div>
+      </div>
+      <div class="pol wealth"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Manulife</span><span class="pchip">ILP</span></div>
+        <h4>InvestReady (III) 13Y Flexi 10</h4><div class="pno">no. •••• 9519</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$18,000.00</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2034</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint acct</span></div>
+        <div class="prow"><span class="l">Projected maturity</span><span class="v tc">S$180,000</span></div></div>
+        <div class="riders"><b>Riders:</b> Payor Premium Waiver</div>
+        <div class="rem">Pay 10 years only; in Gold fund since Mar 2025; dividends available.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Income Insurance</span><span class="pchip">H&amp;S</span><span class="pchip cpf">Medisave</span></div>
+        <h4>Enhanced IncomeShield Preferred</h4><div class="pno">no. •••• 5504</div>
+        <div class="psec"><div class="prow"><span class="l">Cash premium</span><span class="v">S$369.00</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">lifetime</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint + CPF</span></div></div>
+        <div class="riders"><b>Riders:</b> Classic Care Rider</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Manulife</span><span class="pchip">Accident</span></div>
+        <h4>ReadyProtect — Accelerate</h4><div class="pno">no. •••• 6004</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$365.40</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2122</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint acct</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Accidental death</span><span class="v">S$100,000</span></div></div>
+        <div class="riders"><b>Riders:</b> Hospital Cash Benefit; Child Care Benefit</div>
+        <div class="rem">Child Care Benefit expires when Emma turns 25 (2048).</div>
+      </div>
+    </div></div>
+  </div>
+
+  <div class="acc">
+    <div class="acc-head" onclick="this.parentNode.classList.toggle('open')">
+      <div><h3>Olivia Lee Xin Hui</h3><div class="s3">Age 1 · child · 4 policies · funded via joint account</div></div>
+      <span class="arr">▼</span>
+    </div>
+    <div class="acc-body"><div class="polgrid">
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Income Insurance</span><span class="pchip">Whole life</span></div>
+        <h4>Complete Life Secure</h4><div class="pno">no. •••• 4340</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$1,672.45</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2050</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint acct</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Base sum assured</span><span class="v">S$50,000</span></div>
+        <div class="prow"><span class="l">Death / TPD / CI / ECI (5×)</span><span class="v">S$250,000</span></div>
+        <div class="prow"><span class="l">Multiplier ends</span><span class="v">age 80</span></div></div>
+        <div class="riders"><b>Riders:</b> Enhanced Payor Premium Waiver; Early Critical Secure; Protection Benefit</div>
+      </div>
+      <div class="pol wealth"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Income Insurance</span><span class="pchip">ILP</span></div>
+        <h4>Invest Flex Vantage</h4><div class="pno">no. •••• 9762</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$12,358.80</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2035</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint acct</span></div>
+        <div class="prow"><span class="l">Projected maturity</span><span class="v tc">S$120,000</span></div></div>
+        <div class="riders"><b>Riders:</b> Enhanced Payor Premium Waiver</div>
+        <div class="rem">Japan Dividend Fund; MIP15; monthly dividends reinvested; premium holiday usable from year 6.</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Income Insurance</span><span class="pchip">H&amp;S</span><span class="pchip cpf">Medisave</span></div>
+        <h4>Enhanced IncomeShield Preferred</h4><div class="pno">no. •••• 2687</div>
+        <div class="psec"><div class="prow"><span class="l">Cash premium</span><span class="v">S$348.00</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">lifetime</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint + CPF</span></div></div>
+        <div class="riders"><b>Riders:</b> Classic Care Rider</div>
+      </div>
+      <div class="pol"><span class="pstatus">Active</span>
+        <div class="ptop"><span class="pchip ins">Income Insurance</span><span class="pchip">Accident</span></div>
+        <h4>PA Assurance Basic</h4><div class="pno">no. •••• 9651</div>
+        <div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">S$221.05</span></div>
+        <div class="prow"><span class="l">Pays until</span><span class="v">2125</span></div>
+        <div class="prow"><span class="l">Funded by</span><span class="v">Joint acct</span></div></div>
+        <div class="psec"><div class="prow"><span class="l">Accidental death</span><span class="v">S$100,000</span></div></div>
+      </div>
+    </div></div>
+  </div>
+</div></section>
+
+</main>
+
+<div class="tip" id="tip"></div>
+
+<footer><div class="page">
+  <div class="drule"></div>
+  <p>Prepared June 2026 · Strictly confidential — for client review only · All figures in Singapore dollars · Non-guaranteed values are projections · Prepared by FSC</p>
+</div></footer>
+
+<script>
+var INK='#1F1B16',INK2='#57503F',FAINT='#8B8270',RULE='#D9D1C0',OX='#8A3324',PAPER='#F7F3EC',TEAL='#1F6F6B',GOLD='#C99A3F';
+function money(n){return 'S$'+Math.round(n).toLocaleString('en-SG')}
+function money2(n){return 'S$'+n.toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2})}
+
+/* scroll-spy */
+(function(){var links=document.querySelectorAll('nav a');
+ var secs=[].map.call(links,function(a){return document.querySelector(a.getAttribute('href'))});
+ var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){
+   links.forEach(function(a){a.classList.toggle('on',a.getAttribute('href')==='#'+e.target.id)});}});},
+   {rootMargin:'-30% 0px -60% 0px'});
+ secs.forEach(function(s){if(s)io.observe(s)});})();
+
+/* de-overlap label placement: returns adjusted y's keeping min gap */
+function spread(ys,min){var idx=ys.map(function(y,i){return{y:y,i:i}});idx.sort(function(a,b){return a.y-b.y});
+ for(var k=1;k<idx.length;k++){if(idx[k].y-idx[k-1].y<min)idx[k].y=idx[k-1].y+min;}
+ var out=[];idx.forEach(function(o){out[o.i]=o.y});return out;}
+
+/* coverage step chart — Jordan */
+(function(){
+  var W=940,H=336,L=60,R=200,T=34,B=42,a0=30,a1=100,ymax=1400000;
+  var pw=W-L-R,ph=H-T-B;
+  function X(a){return L+(a-a0)/(a1-a0)*pw}function Y(v){return T+ph-v/ymax*ph}
+  var series=[
+    {n:'Death · TPD',c:INK,w:2.6,d:'',pts:[[30,1300000],[70,300000],[80,100000],[85,50000]]},
+    {n:'Critical illness (total)',c:TEAL,w:2.2,d:'7 4',pts:[[30,562000],[70,300000],[80,100000],[85,50000]]},
+    {n:'Early CI (subset)',c:GOLD,w:1.8,d:'2 3',pts:[[30,250000],[80,50000]]}
+  ];
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  [0,500000,1000000].forEach(function(v){
+    s+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>'
+      +'<text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v?(v/1000000)+'.0M':'0')+'</text>';});
+  for(var a=30;a<=100;a+=10)s+='<text x="'+X(a)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+a+'</text>';
+  s+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+  [[70,'ELITE TERM ENDS'],[80,'5× MULTIPLIER ENDS'],[85,'FAMILY CARE ENDS']].forEach(function(an,i){
+    var ly=(i%2===0)?(T-22):(T-9);  /* stagger onto two rows so adjacent labels don't clump */
+    s+='<line x1="'+X(an[0])+'" y1="'+T+'" x2="'+X(an[0])+'" y2="'+Y(0)+'" stroke="'+OX+'" stroke-width="1" stroke-dasharray="2 4"/>'
+      +'<text x="'+X(an[0])+'" y="'+ly+'" text-anchor="middle" font-size="9" letter-spacing="1.5" fill="'+OX+'">'+an[1]+'</text>';});
+  /* draw lines */
+  var ends=[];
+  series.forEach(function(sr){
+    var d='M'+X(sr.pts[0][0])+' '+Y(sr.pts[0][1]);
+    for(var k=1;k<sr.pts.length;k++)d+='L'+X(sr.pts[k][0])+' '+Y(sr.pts[k-1][1])+' L'+X(sr.pts[k][0])+' '+Y(sr.pts[k][1]);
+    var last=sr.pts[sr.pts.length-1][1];d+='L'+X(a1)+' '+Y(last);
+    s+='<path d="'+d+'" fill="none" stroke="'+sr.c+'" stroke-width="'+sr.w+'"'+(sr.d?' stroke-dasharray="'+sr.d+'"':'')+'/>';
+    ends.push({c:sr.c,n:sr.n,v:last,y:Y(last)});});
+  /* end labels — grouped as a legend up in the top-right blank space, lifted clear of the chart floor
+     where the three lines converge (was clumping at the bottom, too close to the axis) */
+  var lx=W-R+10, ly0=T+24;
+  s+='<text x="'+lx+'" y="'+(T+8)+'" font-size="9" letter-spacing="1.5" fill="'+FAINT+'">AT AGE 100</text>';
+  ends.forEach(function(e,i){
+    var ly=ly0+i*17;
+    s+='<text x="'+lx+'" y="'+ly+'" font-size="11.5" fill="'+e.c+'">'+e.n+' · <tspan class="tnum">'+(e.v>=1000000?'S$'+(e.v/1000000)+'M':money(e.v))+'</tspan></text>';});
+  s+='<text x="'+(L+6)+'" y="'+(Y(1300000)-7)+'" font-size="11" fill="'+INK+'" class="tnum">S$1.30M · death / TPD</text>';
+  s+='<text x="'+(L+6)+'" y="'+(Y(562000)-7)+'" font-size="11" fill="'+TEAL+'" class="tnum">S$562k · CI total</text>';
+  s+='<text x="'+(L+6)+'" y="'+(Y(250000)+14)+'" font-size="11" fill="#8a6a1f" class="tnum">S$250k · early CI</text>';
+  s+='</svg>';document.getElementById('c-syt').innerHTML=s;
+})();
+
+/* daughters chart */
+(function(){
+  var W=940,H=210,L=60,R=200,T=20,B=40,a0=1,a1=100,ymax=300000;
+  var pw=W-L-R,ph=H-T-B;function X(a){return L+(a-a0)/(a1-a0)*pw}function Y(v){return T+ph-v/ymax*ph}
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  [0,100000,200000,300000].forEach(function(v){
+    s+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>'
+      +'<text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v/1000)+'k</text>';});
+  for(var a=10;a<=100;a+=10)s+='<text x="'+X(a)+'" y="'+(H-16)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+a+'</text>';
+  s+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+  /* shaded multiplied era — teal, clearly distinct from paper */
+  s+='<rect x="'+X(a0)+'" y="'+Y(250000)+'" width="'+(X(80)-X(a0))+'" height="'+(Y(0)-Y(250000))+'" fill="'+TEAL+'" opacity="0.12"/>';
+  s+='<line x1="'+X(80)+'" y1="'+T+'" x2="'+X(80)+'" y2="'+Y(0)+'" stroke="'+OX+'" stroke-width="1" stroke-dasharray="2 4"/>'
+    +'<text x="'+X(80)+'" y="'+(T-6)+'" text-anchor="middle" font-size="9" letter-spacing="1.5" fill="'+OX+'">5× MULTIPLIER ENDS</text>';
+  var d='M'+X(a0)+' '+Y(250000)+' L'+X(80)+' '+Y(250000)+' L'+X(80)+' '+Y(50000)+' L'+X(a1)+' '+Y(50000);
+  s+='<path d="'+d+'" fill="none" stroke="'+INK+'" stroke-width="2.6"/>';
+  s+='<text x="'+(X(a1)+10)+'" y="'+(Y(50000)+4)+'" font-size="11.5" fill="'+INK+'">All four covers · <tspan class="tnum">S$50k</tspan></text>';
+  s+='<text x="'+(L+6)+'" y="'+(Y(250000)-8)+'" font-size="11" fill="'+TEAL+'" class="tnum">S$250,000 — death · TPD · CI · ECI</text>';
+  s+='</svg>';document.getElementById('c-kids').innerHTML=s;
+})();
+
+/* premium runway */
+(function(){
+  var RUNS=[
+    [2026,2034,51374.45,16425.53,34948.92,1051.08],
+    [2035,2035,23199.45,6250.53,16948.92,19051.08],
+    [2036,2043,10840.65,6250.53,4590.12,31409.88],
+    [2044,2048,7370.79,2780.67,4590.12,31409.88],
+    [2049,2050,5756.57,2780.67,2975.90,33024.10],
+    [2051,2065,4084.12,2780.67,1303.45,34696.55],
+    [2066,2080,3181.57,1878.12,1303.45,34696.55],
+    [2081,2094,2985.07,1681.62,1303.45,34696.55],
+    [2095,2095,2676.37,1372.92,1303.45,34696.55],
+    [2096,2120,1303.45,0,1303.45,34696.55]
+  ];
+  var YEARS=[];RUNS.forEach(function(r){for(var y=r[0];y<=r[1];y++)YEARS.push({y:y,tot:r[2],self:r[3],joint:r[4],hr:r[5]})});
+  var W=940,H=300,L=60,R=24,T=30,B=44,y0=2026,y1=2120,ymax=55000;
+  var pw=W-L-R,ph=H-T-B;function X(y){return L+(y-y0)/(y1-y0)*pw}function Y(v){return T+ph-v/ymax*ph}
+  var s='<svg id="paysvg" viewBox="0 0 '+W+' '+H+'">';
+  [0,10000,20000,30000,40000,50000].forEach(function(v){
+    s+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>'
+      +'<text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v/1000)+'k</text>';});
+  for(var y=2030;y<=2120;y+=10)s+='<text x="'+X(y)+'" y="'+(H-20)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+y+'</text>';
+  /* area fill — teal, distinct from paper */
+  var d='M'+X(y0)+' '+Y(0);RUNS.forEach(function(r){d+='L'+X(r[0])+' '+Y(r[2])+' L'+X(Math.min(r[1]+1,y1))+' '+Y(r[2]);});
+  d+='L'+X(y1)+' '+Y(0)+' Z';s+='<path d="'+d+'" fill="'+TEAL+'" opacity="0.16"/>';
+  var dl='';RUNS.forEach(function(r,i){dl+=(i?'L':'M')+X(r[0])+' '+Y(r[2])+' L'+X(Math.min(r[1]+1,y1))+' '+Y(r[2])+' ';});
+  s+='<path d="'+dl+'" fill="none" stroke="'+INK+'" stroke-width="2.2"/>';
+  s+='<line x1="'+L+'" y1="'+Y(36000)+'" x2="'+(W-R)+'" y2="'+Y(36000)+'" stroke="'+OX+'" stroke-width="1.2" stroke-dasharray="6 5"/>'
+    +'<text x="'+(W-R)+'" y="'+(Y(36000)-7)+'" text-anchor="end" font-size="10" letter-spacing="1" fill="'+OX+'">JOINT ACCOUNT CAPACITY · S$36K/YR</text>';
+  [[2026,51374,'S$51,374'],[2035,23199,'S$23,199'],[2036,10841,'S$10,841'],[2051,4084,'S$4,084'],[2096,1303,'S$1,303']].forEach(function(an){
+    var x=X(an[0]),yv=Y(an[1]);
+    s+='<circle cx="'+x+'" cy="'+yv+'" r="3" fill="'+PAPER+'" stroke="'+INK+'" stroke-width="1.6"/>'
+      +'<text x="'+(x+6)+'" y="'+(yv-9)+'" font-size="11" fill="'+INK+'" class="tnum">'+an[2]+'</text>';});
+  YEARS.forEach(function(dd,i){s+='<rect class="hov" data-i="'+i+'" x="'+X(dd.y)+'" y="'+T+'" width="'+(pw/(y1-y0))+'" height="'+ph+'" fill="transparent"/>';});
+  s+='</svg>';document.getElementById('c-pay').innerHTML=s;
+  var tip=document.getElementById('tip'),svg=document.getElementById('paysvg');
+  svg.addEventListener('mousemove',function(e){var t=e.target;
+    if(t.classList&&t.classList.contains('hov')){var dd=YEARS[+t.dataset.i];
+      tip.style.display='block';tip.style.left=Math.min(e.clientX+14,window.innerWidth-300)+'px';tip.style.top=(e.clientY-12)+'px';
+      tip.innerHTML='<b>'+dd.y+'</b> — <span class="num">'+money2(dd.tot)+'</span><br>self <span class="num">'+money2(dd.self)+'</span> · joint <span class="num">'+money2(dd.joint)+'</span><br>joint headroom <span class="num">'+money2(dd.hr)+'</span>';
+    }else tip.style.display='none';});
+  svg.addEventListener('mouseleave',function(){tip.style.display='none'});
+})();
+
+/* payout milestone — coupon bars + maturity + cumulative */
+(function(){
+  var W=940,H=280,L=60,R=24,T=24,B=40,y0=2026,y1=2061,ymax=460000;
+  var pw=W-L-R,ph=H-T-B;function X(y){return L+(y-y0)/(y1-y0)*pw}function Y(v){return T+ph-v/ymax*ph}
+  var coupon=27600,matYr=2060,matVal=400000;
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  [0,100000,200000,300000,400000].forEach(function(v){
+    s+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>'
+      +'<text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v/1000)+'k</text>';});
+  for(var y=2030;y<=2060;y+=10)s+='<text x="'+X(y)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+y+'</text>';
+  /* cumulative payout is shown as a per-decade table below the chart (not an in-chart line) */
+  /* coupon bars */
+  var bw=pw/(y1-y0)*0.6;
+  for(var y=y0;y<=2060;y++){var bh=ph*coupon/ymax;s+='<rect x="'+(X(y)-bw/2)+'" y="'+Y(coupon)+'" width="'+bw+'" height="'+bh+'" fill="'+TEAL+'" opacity="0.85"/>';}
+  /* maturity spike — RULE for all clients: draw maturity AFTER the coupon bars so it always sits on top,
+     in a distinct colour (rust vs teal), with a thin paper outline so the overlap reads cleanly whenever a
+     coupon falls in the same year */
+  s+='<rect x="'+(X(matYr)-bw/2)+'" y="'+Y(matVal)+'" width="'+bw+'" height="'+(ph*matVal/ymax)+'" fill="'+OX+'" stroke="'+PAPER+'" stroke-width="0.75"/>';
+  s+='<text x="'+X(matYr)+'" y="'+(Y(matVal)-7)+'" text-anchor="middle" font-size="10.5" fill="'+OX+'" class="tnum">S$400k maturity</text>';
+  s+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+  s+='<text x="'+(X(2032))+'" y="'+(Y(coupon)-7)+'" font-size="10.5" fill="'+TEAL+'" class="tnum">S$27,600 / yr coupons</text>';
+  s+='</svg>';document.getElementById('c-payout').innerHTML=s;
+})();
+
+/* passive income step */
+(function(){
+  var W=940,H=200,L=60,R=160,T=20,B=40,a0=30,a1=100,ymax=2600;
+  var pw=W-L-R,ph=H-T-B;function X(a){return L+(a-a0)/(a1-a0)*pw}function Y(v){return T+ph-v/ymax*ph}
+  var s='<svg viewBox="0 0 '+W+' '+H+'">';
+  [0,1000,2000].forEach(function(v){
+    s+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>'
+      +'<text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">S$'+v.toLocaleString()+'</text>';});
+  for(var a=30;a<=100;a+=10)s+='<text x="'+X(a)+'" y="'+(H-16)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+a+'</text>';
+  s+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+  /* steps: 0 to 39, 1600 at 39, 2300 at 40+ */
+  var d='M'+X(30)+' '+Y(0)+' L'+X(39)+' '+Y(0)+' L'+X(39)+' '+Y(1600)+' L'+X(40)+' '+Y(1600)+' L'+X(40)+' '+Y(2300)+' L'+X(a1)+' '+Y(2300);
+  var area=d+' L'+X(a1)+' '+Y(0)+' L'+X(30)+' '+Y(0)+' Z';
+  s+='<path d="'+area+'" fill="'+TEAL+'" opacity="0.14"/>';
+  s+='<path d="'+d+'" fill="none" stroke="'+TEAL+'" stroke-width="2.4"/>';
+  s+='<line x1="'+X(39)+'" y1="'+T+'" x2="'+X(39)+'" y2="'+Y(0)+'" stroke="'+GOLD+'" stroke-width="1" stroke-dasharray="2 4"/>';
+  /* tier labels standardised to the right edge and stacked; if more tiers crowd in for other clients,
+     stagger each further right rather than letting the words collide */
+  s+='<text x="'+(X(a1)+10)+'" y="'+(Y(2300)+4)+'" font-size="11.5" fill="'+TEAL+'">S$2,300 / month · <tspan class="tnum">age 40+</tspan></text>';
+  s+='<text x="'+(X(a1)+10)+'" y="'+(Y(2300)+22)+'" font-size="11" fill="#8a6a1f">S$1,600 / month · <tspan class="tnum">age 39</tspan></text>';
+  s+='</svg>';document.getElementById('c-pi').innerHTML=s;
+})();
+</script>
+</body>
+</html>
