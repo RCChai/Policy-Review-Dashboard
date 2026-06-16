@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/29020298/README.md)
 # Policy Dashboard Generator — Editorial Style
 
 A **dashboard generator**: feed it a filled policy-consolidation Excel workbook and it
@@ -13,11 +12,25 @@ dependencies except Google Fonts. The generated HTML is delivered to the client 
 
 ```
 policy-dashboard-editorial/
-├── SKILL.md                              # the skill: triggers + 5-step build process
+├── index.html                            # the browser generator — open it, drop in an Excel,
+│                                         #   download a finished editorial dashboard
+├── SKILL.md                              # the same generator as a Claude Code skill
 └── reference/
     ├── section-data-map.md               # which workbook cell feeds each dashboard section
-    └── example-editorial-dashboard.html  # canonical design checkpoint — clone this
+    └── example-editorial-dashboard.html  # canonical design checkpoint (anonymised sample)
 ```
+
+There are **two ways to generate** a dashboard, both producing the same editorial output:
+
+1. **`index.html` — browser tool.** Open it (locally or via GitHub Pages), upload a filled
+   consolidation workbook, enter the owner's DOB (DDMMYYYY) as the access password, and it
+   builds + downloads the dashboard. All processing is in-browser (SheetJS) — **no data is
+   uploaded or stored anywhere.** Safe to host publicly because the page itself holds no
+   client data.
+2. **`SKILL.md` — Claude Code skill.** Same job, run from a Claude session.
+
+The dashboard is **never auto-hosted** — you download the HTML and send it to the client
+directly.
 
 `example-editorial-dashboard.html` is the **source of truth** for the design. The skill
 tells Claude to read that file first, clone its structure / CSS / chart code, then swap in

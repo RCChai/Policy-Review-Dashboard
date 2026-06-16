@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Policy Dashboard Generator — Editorial</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Archivo:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--paper:#F7F3EC;--card:#FBF8F2;--ink:#1F1B16;--ink2:#57503F;--faint:#8B8270;--rule:#D9D1C0;--ox:#8A3324;--teal:#1F6F6B;--gold:#C99A3F;--red:#b3402f;--green:#1F6F6B}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Archivo",sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+.app-card{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--ink);padding:40px;max-width:560px;width:100%}
+.logo{margin-bottom:26px}
+.logo-text{font-family:"Fraunces",serif;font-size:26px;font-weight:500}
+.logo-sub{font-size:11px;color:var(--faint);margin-top:3px;letter-spacing:.12em;text-transform:uppercase}
+.step{margin-bottom:22px}
+.step-label{font-size:10.5px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.16em;margin-bottom:8px}
+.drop-zone{border:1.5px dashed var(--rule);padding:30px;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--paper)}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--teal);background:#eef3f1}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:28px;margin-bottom:8px}
+.drop-text{font-size:13.5px;color:var(--ink2)}
+.drop-text b{color:var(--ink)}
+.file-chosen{display:none;align-items:center;gap:10px;padding:11px 15px;background:#eef3f1;border:1px solid var(--teal);margin-top:10px}
+.file-chosen.show{display:flex}
+.file-chosen-name{font-size:13px;font-weight:600;color:var(--ink)}
+.file-chosen-size{font-size:11px;color:var(--faint)}
+.pw-input{width:100%;padding:11px 14px;border:1px solid var(--rule);font-size:14px;font-family:"Spline Sans Mono",monospace;letter-spacing:.1em;outline:none;background:var(--paper)}
+.pw-input:focus{border-color:var(--teal)}
+.pw-hint{font-size:11px;color:var(--faint);margin-top:6px;font-style:italic}
+.pw-status{font-size:12px;margin-top:8px;font-weight:600;padding:7px 11px;display:none}
+.pw-status.ok{display:block;background:#e4edea;color:var(--teal)}
+.pw-status.fail{display:block;background:#f4e2dc;color:var(--ox)}
+.btn{background:var(--ink);color:var(--paper);border:none;padding:13px 28px;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;width:100%;transition:background .15s;font-family:"Archivo",sans-serif}
+.btn:hover{background:#332c22}
+.btn:disabled{background:#bbb1a0;cursor:not-allowed}
+.btn-teal{background:var(--teal)}.btn-teal:hover{background:#19595580}
+.status-bar{margin-top:16px;padding:11px 15px;font-size:13px;display:none}
+.status-bar.info{display:block;background:#e8eef0;color:#2a5b66}
+.status-bar.error{display:block;background:#f4e2dc;color:var(--ox)}
+.status-bar.success{display:block;background:#e4edea;color:var(--teal)}
+.progress{height:3px;background:var(--rule);margin-top:12px;overflow:hidden;display:none}
+.progress.show{display:block}
+.progress-fill{height:100%;background:var(--teal);transition:width .3s;width:0}
+.divider{border:none;border-top:1px solid var(--rule);margin:20px 0}
+.footer-note{font-size:11px;color:var(--faint);text-align:center;margin-top:20px;line-height:1.7}
+</style>
+</head>
+<body>
+
+<div class="app-card">
+  <div class="logo">
+    <div class="logo-text">Policy Dashboard Generator</div>
+    <div class="logo-sub">Editorial style · Client Review Tool</div>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Step 1 — Upload Client Excel</div>
+    <div class="drop-zone" id="dropZone">
+      <input type="file" id="fileInput" accept=".xlsx,.xlsm" onchange="handleFile(this.files[0])">
+      <div class="drop-icon">⤓</div>
+      <div class="drop-text"><b>Click to upload</b> or drag &amp; drop<br><span style="font-size:12px;color:var(--faint)">policy-consolidation-template v2.xlsx</span></div>
+    </div>
+    <div class="file-chosen" id="fileChosen">
+      <span style="font-size:18px">✓</span>
+      <div><div class="file-chosen-name" id="fileName">—</div><div class="file-chosen-size" id="fileSize">—</div></div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-label">Step 2 — Enter Access Password</div>
+    <input type="password" class="pw-input" id="pwInput" placeholder="DDMMYYYY" maxlength="8" oninput="checkPw()" autocomplete="off">
+    <div class="pw-hint">Password = Policy owner's date of birth in DDMMYYYY format</div>
+    <div class="pw-status" id="pwStatus"></div>
+  </div>
+
+  <hr class="divider">
+
+  <button class="btn btn-teal" id="generateBtn" onclick="generate()" disabled>Generate Dashboard</button>
+  <div class="status-bar" id="statusBar"></div>
+  <div class="progress" id="progress"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="footer-note">
+  All processing is done in your browser. No data is uploaded or stored anywhere.<br>
+  Strictly confidential — for advisor use only.
+</div>
+
+<script>
+let workbook=null, ownerDOB=null, parsedData=null;
+
+const dz=document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag-over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0])});
+
+function handleFile(file){
+  if(!file)return;
+  document.getElementById('fileName').textContent=file.name;
+  document.getElementById('fileSize').textContent=(file.size/1024).toFixed(1)+' KB';
+  document.getElementById('fileChosen').classList.add('show');
+  setStatus('info','Reading Excel file...');setProgress(20);
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      workbook=XLSX.read(e.target.result,{type:'array',cellDates:false});
+      parsedData=parseWorkbook(workbook);
+      ownerDOB=parsedData.ownerDOB;
+      setProgress(60);
+      setStatus('info','✓ Loaded: '+parsedData.ownerName+' · '+parsedData.policies.length+' policies');
+      setProgress(100);
+      document.getElementById('pwInput').focus();checkPw();
+    }catch(err){setStatus('error','⚠ Could not parse file. Check it matches the template. '+err.message);setProgress(0);console.error(err);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function checkPw(){
+  const pw=document.getElementById('pwInput').value.trim();
+  const s=document.getElementById('pwStatus'),btn=document.getElementById('generateBtn');
+  if(!workbook){btn.disabled=true;return;}
+  if(!pw){s.style.display='none';btn.disabled=true;return;}
+  if(pw===ownerDOB){s.className='pw-status ok';s.textContent='✓ Access granted';s.style.display='block';btn.disabled=false;}
+  else{s.className='pw-status fail';s.textContent='✗ Incorrect password';s.style.display='block';btn.disabled=true;}
+}
+
+function generate(){
+  if(!parsedData)return;
+  setStatus('info','Generating dashboard...');setProgress(30);
+  try{
+    const html=buildDashboardHTML(parsedData);
+    setProgress(80);
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    const safeName=parsedData.ownerName.replace(/\s+/g,'_').replace(/[^A-Za-z0-9_]/g,'');
+    const t=new Date();
+    const ds=String(t.getFullYear())+String(t.getMonth()+1).padStart(2,'0')+String(t.getDate()).padStart(2,'0');
+    a.href=url;a.download=safeName+'_Policy_Review_v2_'+ds+'.html';a.click();
+    URL.revokeObjectURL(url);
+    setProgress(100);setStatus('success','✓ Dashboard downloaded: '+a.download);
+  }catch(err){setStatus('error','⚠ Generation failed: '+err.message);console.error(err);}
+}
+
+function setStatus(t,m){const el=document.getElementById('statusBar');el.className='status-bar '+t;el.textContent=m;}
+function setProgress(p){const el=document.getElementById('progress');el.className='progress show';document.getElementById('progressFill').style.width=p+'%';}
+
+// ── DATE HELPERS ────────────────────────────────────────────
+function serialToDDMMYYYY(s){if(!s||isNaN(s))return '';const d=new Date(Math.round((s-25569)*86400*1000));return String(d.getUTCDate()).padStart(2,'0')+String(d.getUTCMonth()+1).padStart(2,'0')+d.getUTCFullYear();}
+function serialToYear(s){if(!s||isNaN(s))return null;const d=new Date(Math.round((s-25569)*86400*1000));return d.getUTCFullYear();}
+
+// ── COLUMN NORMALISER ───────────────────────────────────────
+function normCol(s){return String(s||'').replace(/[\r\n]+/g,' ').replace(/ {2,}/g,' ').trim();}
+function makeGetter(hdr,row){const map={};hdr.forEach((h,i)=>{const k=normCol(h);if(k)map[k]=i;});return col=>{const idx=map[normCol(col)];return idx!==undefined?(row[idx]??''):'';};}
+
+// ── PARSE WORKBOOK (proven engine) ──────────────────────────
+function parseWorkbook(wb){
+  const sheetRows=name=>{const sh=wb.Sheets[name];if(!sh)return[];return XLSX.utils.sheet_to_json(sh,{header:1,defval:''});};
+
+  // 1_Client_Profile
+  const cpRows=sheetRows('1_Client_Profile');
+  const clients=[];let headerRow=-1;
+  for(let i=0;i<cpRows.length;i++){if(cpRows[i][0]==='Client ID'){headerRow=i;break;}}
+  const cpHeaders=headerRow>=0?cpRows[headerRow]:[];
+  for(let i=headerRow+1;i<cpRows.length;i++){
+    const r=cpRows[i];if(!r[0]||!String(r[0]).startsWith('IC-'))continue;
+    const get=col=>r[cpHeaders.indexOf(col)]??'';
+    clients.push({
+      id:get('Client ID'),name:String(get('Full Name (as per NRIC)')).trim(),
+      dobSerial:get('Date of Birth'),birthYear:serialToYear(get('Date of Birth')),
+      dobPw:serialToDDMMYYYY(get('Date of Birth')),
+      age:get('Age'),gender:get('Gender'),marital:get('Marital Status'),
+      occupation:get('Occupation'),smoker:get('Smoker?'),role:get('Client Role'),
+      isChild:String(get('Is Child Client?')).toLowerCase()==='yes',
+      income:parseFloat(get('Monthly Income ($)'))||0,
+      expenses:parseFloat(get('Monthly Expenses ($)'))||0,
+      liabilities:parseFloat(get('Liabilities / Loans ($)'))||0,
+      jointName:get('Source Name'),
+      jointBalance:parseFloat(get('Current Balance ($)'))||0,
+      jointTopup:parseFloat(get('Monthly Top-up ($)'))||0,
+    });
+  }
+  const owner=clients.find(c=>!c.isChild)||clients[0];
+
+  // 2_All_Policies
+  const apRows=sheetRows('2_All_Policies');let apHeader=-1;
+  for(let i=0;i<apRows.length;i++){if(String(apRows[i][0]).trim()==='Policy Owner ID'){apHeader=i;break;}}
+  const apH=apHeader>=0?apRows[apHeader]:[];
+  const policies=[];
+  for(let i=apHeader+1;i<apRows.length;i++){
+    const r=apRows[i];if(!r[0]||!String(r[0]).startsWith('IC-'))continue;
+    const g=makeGetter(apH,r);
+    const annPrem=parseFloat(g('Annual Premium ($)'))||parseFloat(g('Annual / Yearly Premium ($)'))||0;
+    policies.push({
+      ownerID:g('Policy Owner ID'),insuredID:g('Life Insured ID'),
+      insuredName:String(g('Life Insured Name')).trim(),
+      insurer:g('Insurer'),policyNo:g('Policy Number'),
+      planName:String(g('Plan Name')).trim(),policyType:g('Policy Type'),
+      category:g('Policy Category'),
+      premEndYear:serialToYear(g('Premium End Date')),
+      maturityYear:serialToYear(g('Policy Maturity / End Date')),
+      status:g('Policy Status')||'Active',premFreq:g('Premium Frequency'),
+      annualPrem:annPrem,premTerm:g('Payment Term (Yrs)'),
+      paidToDate:parseFloat(g('Premiums Paid to Date ($)'))||0,
+      sumAssured:parseFloat(g('Sum Assured ($)'))||0,
+      accidentalDeath:parseFloat(g('Accidental Death  Benefit ($)'))||0,
+      deathBenefit:parseFloat(g('Death Benefit ($)'))||0,
+      tpdBenefit:parseFloat(g('TPD Benefit ($)'))||0,
+      ciCoverage:parseFloat(g('CI Coverage ($)'))||0,
+      eciCoverage:parseFloat(g('ECI Coverage ($)'))||0,
+      multiplierEndAge:parseInt(g('Multiplier End Age'))||0,
+      remarks:g('Remarks'),riders:g('Riders'),
+      cpf:String(g('CPF Premium?  (Yes / No)')).toLowerCase()==='yes',
+      source:g('Source of Premiums  (Self / Joint / Other)')||'Self',
+    });
+  }
+
+  // 4_Coverage_Summary
+  const csRows=sheetRows('4_Coverage_Summary');let csH=-1;
+  for(let i=0;i<csRows.length;i++){if(String(csRows[i][0]).trim()==='Client ID'){csH=i;break;}}
+  const csHdr=csH>=0?csRows[csH]:[];
+  const coverages={};
+  for(let i=csH+1;i<csRows.length;i++){
+    const r=csRows[i];if(!r[0]||!String(r[0]).startsWith('IC-'))continue;
+    const g=makeGetter(csHdr,r);
+    coverages[g('Client ID')]={
+      totalMonthly:parseFloat(g('Total Monthly ($)'))||0,
+      totalAnnual:parseFloat(g('Total Annual ($)'))||0,
+      paidToDate:parseFloat(g('Total Paid to Date ($)'))||0,
+      activePolicies:parseInt(g('Active Policies'))||0,
+      hasHS:String(g('Has H&S?')).toLowerCase()==='yes',
+      sumAssured:parseFloat(g('Sum Assured ($)'))||0,
+      totalDeath:parseFloat(g('Total Death ($)'))||0,
+      totalTPD:parseFloat(g('Total TPD ($)'))||0,
+      totalCI:parseFloat(g('Total CI ($)'))||0,
+      totalECI:parseFloat(g('Total ECI ($)'))||0,
+      fromSelf:parseFloat(g('From Self ($)'))||0,
+      fromJoint:parseFloat(g('From Joint Account ($)'))||0,
+    };
+  }
+
+  // Basic_Info — needs + afford
+  const biRows=sheetRows('Basic_Info');const needs={},afford={};
+  for(const r of biRows){
+    const k=String(r[0]||'').trim();
+    if(k==='Death')needs.death={rec:parseFloat(r[1])||0,have:parseFloat(r[2])||0,shortfall:parseFloat(r[3])||0};
+    if(k==='TPD')needs.tpd={rec:parseFloat(r[1])||0,have:parseFloat(r[2])||0,shortfall:parseFloat(r[3])||0};
+    if(k==='ECI (Early Critical Illness)')needs.eci={rec:parseFloat(r[1])||0,have:parseFloat(r[2])||0,shortfall:parseFloat(r[3])||0};
+    if(k==='CI (Critical Illness)')needs.ci={rec:parseFloat(r[1])||0,have:parseFloat(r[2])||0,shortfall:parseFloat(r[3])||0};
+    if(k==='Protection (20% rule)')afford.protection={yr:parseFloat(r[1])||0,mo:parseFloat(r[2])||0,pct:parseFloat(r[3])||0};
+    if(k==='Wealth Accumulation (30% rule)')afford.wealth={yr:parseFloat(r[1])||0,mo:parseFloat(r[2])||0,pct:parseFloat(r[3])||0};
+    if(k==='Total (Protection + Wealth)')afford.total={yr:parseFloat(r[1])||0,mo:parseFloat(r[2])||0,pct:parseFloat(r[3])||0};
+    if(k==='Self (own income)')afford.self={yr:parseFloat(r[1])||0,mo:parseFloat(r[2])||0};
+    if(k==='Joint Account')afford.joint={yr:parseFloat(r[1])||0,mo:parseFloat(r[2])||0};
+    if(k==='Joint Account Capacity')afford.jointCap={yr:parseFloat(r[1])||0};
+    if(k==='Joint Account Headroom')afford.jointHeadroom={yr:parseFloat(r[1])||0};
+  }
+
+  // 5_Maturity_Schedule
+  const msRows=sheetRows('5_Maturity_Schedule');let msH=-1;
+  for(let i=0;i<msRows.length;i++){if(String(msRows[i][0]).trim()==='Client ID'){msH=i;break;}}
+  const msHdr=msH>=0?msRows[msH]:[];const maturityData=[];
+  for(let i=msH+1;i<msRows.length;i++){
+    const r=msRows[i];if(!r[0]||!String(r[0]).startsWith('IC-'))continue;
+    const g=makeGetter(msHdr,r);const pname=String(g('Plan Name')).trim();if(!pname)continue;
+    maturityData.push({
+      insuredName:g('Life Insured Name'),policyNo:g('Policy Number'),planName:pname,insurer:g('Insurer'),
+      maturityYear:serialToYear(g('Policy Maturity Date')),
+      guaranteedVal:parseFloat(g('Guaranteed Maturity Value ($)'))||0,
+      nonGuaranteedVal:parseFloat(g('Non-Guaranteed Maturity Value ($)'))||0,
+      totalIllustrated:parseFloat(g('Total Illustrated Maturity Value ($)'))||0,
+      annualPrem:parseFloat(g('Annual Premium ($)'))||0,
+      premTerm:g('Premium Payment Term (yrs)'),
+      paidToDate:parseFloat(g('Premiums Paid to Date ($)'))||0,
+      remainingPrem:parseFloat(g('Remaining Premiums to Pay ($)'))||0,
+    });
+  }
+
+  // 7_Payment_Milestone — yearly cash timeline
+  const pmRows=sheetRows('7_Payment_Milestone');const pmYears=[];
+  let inYears=false,pmTotalIdx=-1,pmCumIdx=-1,pmMilIdx=-1,pmSelfIdx=-1,pmJointIdx=-1,pmCapIdx=-1,pmHeadIdx=-1;
+  for(const r of pmRows){
+    const k=String(r[0]||'').trim();
+    if(k==='Year'){
+      inYears=true;const fi=name=>r.findIndex(h=>normCol(h)===normCol(name));
+      pmTotalIdx=fi('Total Annual Premium ($)');pmCumIdx=fi('Cumulative Paid ($)');pmMilIdx=fi('Milestone');
+      pmSelfIdx=fi('From Owner (Self) ($)');pmJointIdx=fi('From Joint Account ($)');
+      pmCapIdx=fi('Joint Capacity ($)');pmHeadIdx=fi('Joint Headroom ($)');continue;
+    }
+    if(inYears){
+      const yr=parseInt(r[0]);
+      if(!isNaN(yr)&&yr>=2020&&yr<=2130){
+        pmYears.push({
+          year:yr,
+          total:parseFloat(r[pmTotalIdx>=0?pmTotalIdx:7])||0,
+          cumulative:parseFloat(r[pmCumIdx>=0?pmCumIdx:8])||0,
+          milestone:String(r[pmMilIdx>=0?pmMilIdx:9]||'').trim(),
+          fromSelf:parseFloat(r[pmSelfIdx>=0?pmSelfIdx:10])||0,
+          fromJoint:parseFloat(r[pmJointIdx>=0?pmJointIdx:11])||0,
+          jointCap:parseFloat(r[pmCapIdx>=0?pmCapIdx:13])||0,
+          jointHeadroom:parseFloat(r[pmHeadIdx>=0?pmHeadIdx:14])||0,
+        });
+      }
+    }
+  }
+
+  // 8_Payout_Milestone — eligible wealth/payout policies
+  const poRows=sheetRows('8_Payout_Milestone');const payoutPolicies=[];let poH=-1;
+  for(let i=0;i<poRows.length;i++){if(String(poRows[i][0]).trim()==='#'&&String(poRows[i][1]).trim()==='Plan Name'){poH=i;break;}}
+  if(poH>=0){
+    const h=poRows[poH];const g=(r,name)=>{const idx=h.findIndex(x=>normCol(x)===normCol(name));return idx>=0?r[idx]:'';};
+    for(let i=poH+1;i<poRows.length;i++){
+      const r=poRows[i];
+      if(!String(r[0]).trim()&&!String(r[1]).trim())break; // blank row ends the eligible-policies block
+      const n=parseInt(r[0]);if(isNaN(n)||!String(r[1]).trim())continue;
+      payoutPolicies.push({
+        plan:String(r[1]).trim(),insurer:r[2],type:r[3],
+        maturityYear:parseInt(g(r,'Maturity / Projection Year'))||null,
+        maturityValue:parseFloat(g(r,'Maturity Value ($)'))||0,
+        couponAnnual:parseFloat(g(r,'Coupons / Div Annual ($)'))||0,
+        cpf:String(g(r,'CPF?')).toLowerCase()==='yes',
+      });
+    }
+  }
+
+  // 6_Passive_Income_Timeline — plan input rows
+  const piRows=sheetRows('6_Passive_Income_Timeline');const passivePlans=[];let piH=-1;
+  for(let i=0;i<piRows.length;i++){if(String(piRows[i][0]).trim()==='Plan Name'&&String(piRows[i][4]).trim().toLowerCase().includes('monthly')){piH=i;break;}}
+  if(piH>=0){
+    const h=piRows[piH];const g=(r,name)=>{const idx=h.findIndex(x=>normCol(x)===normCol(name));return idx>=0?r[idx]:'';};
+    for(let i=piH+1;i<piRows.length;i++){
+      const r=piRows[i];if(!String(r[0]).trim())continue;
+      const monthly=parseFloat(g(r,'Monthly Income ($)'))||0;if(!monthly)continue;
+      const endRaw=String(g(r,"Income End Age (or 'Lifetime')")||g(r,'Income End Age')||'').trim();
+      passivePlans.push({
+        plan:String(r[0]).trim(),insurer:r[1],monthly:monthly,
+        startAge:parseInt(g(r,'Income Start Age'))||0,
+        endAge:/life/i.test(endRaw)?100:(parseInt(endRaw)||100),
+      });
+    }
+  }
+
+  const today=new Date();const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const reportMonth=months[today.getMonth()]+' '+today.getFullYear();
+  const reportDate=String(today.getDate()).padStart(2,'0')+' '+reportMonth;
+
+  return {owner,clients,policies,coverages,needs,afford,maturityData,pmYears,payoutPolicies,passivePlans,
+    reportDate,reportMonth,ownerName:owner.name,ownerDOB:owner.dobPw};
+}
+
+// ════════════════════════════════════════════════════════════
+//  EDITORIAL DASHBOARD BUILDER
+// ════════════════════════════════════════════════════════════
+function buildDashboardHTML(d){
+  const {owner,clients,policies,coverages,needs,afford,maturityData,pmYears,payoutPolicies,passivePlans,reportMonth}=d;
+  const yNow=new Date().getFullYear();
+
+  const INK='#1F1B16',INK2='#57503F',FAINT='#8B8270',RULE='#D9D1C0',OX='#8A3324',PAPER='#F7F3EC',TEAL='#1F6F6B',GOLD='#C99A3F';
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const SGD=n=>'S$'+Math.round(Number(n)||0).toLocaleString('en-SG');
+  const SGD2=n=>'S$'+(Number(n)||0).toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const last4=no=>{no=String(no||'').trim();return no?'no. •••• '+no.slice(-4):'no. not recorded';};
+  const num2word=n=>{const w=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];return n<=20?w[n]:String(n);};
+  const cap=s=>{s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);};
+  const isWealth=p=>/wealth|accumulat/i.test(p.category)||/ilp|invest|endow|annuit|saving|retire/i.test((p.policyType||'')+' '+(p.category||''));
+  const niceMax=v=>{if(v<=0)return 1;const p=Math.pow(10,Math.floor(Math.log10(v)));const m=v/p;const n=m<=1?1:m<=2?2:m<=5?5:10;return n*p;};
+  const payUntil=p=>{const y=p.premEndYear;if(!y||y>=9000)return 'lifetime';return String(y);};
+
+  const insureds=[owner,...clients.filter(c=>c.id!==owner.id)];
+  const polByIns=id=>policies.filter(p=>p.insuredID===id);
+  const oc=coverages[owner.id]||{};
+  const ownerYearInc=(owner.income||0)*12;
+
+  const protPrem=policies.filter(p=>!isWealth(p)).reduce((s,p)=>s+p.annualPrem,0);
+  const wealthPrem=policies.filter(p=>isWealth(p)).reduce((s,p)=>s+p.annualPrem,0);
+  const totalAnnual=oc.totalAnnual||(protPrem+wealthPrem);
+  const jointCapYr=(afford.jointCap&&afford.jointCap.yr)||(owner.jointTopup*12)||0;
+  const jointHeadroom=(afford.jointHeadroom&&afford.jointHeadroom.yr);
+
+  // ════ SVG CHART BUILDERS ════
+  function coverSeries(cl){
+    const cur=parseInt(cl.age)||0;
+    const pols=polByIns(cl.id).filter(p=>(p.deathBenefit||p.tpdBenefit||p.ciCoverage||p.eciCoverage)>0);
+    const endAgeOf=p=>{let y=p.maturityYear||p.premEndYear;if(!y||y>=9000)return 100;return Math.max(cur,Math.min(100,cur+(y-yNow)));};
+    const valAt=(p,age,f)=>{if(age>endAgeOf(p))return 0;let v=p[f]||0;if(p.multiplierEndAge>0&&age>=p.multiplierEndAge)v=Math.min(v,p.sumAssured||v);return v;};
+    const totalAt=(age,f)=>pols.reduce((s,p)=>s+valAt(p,age,f),0);
+    function steps(f){const out=[];let prev=null;for(let a=cur;a<=100;a++){const v=totalAt(a,f);if(prev===null||v!==prev){out.push([a,v]);prev=v;}}return out;}
+    const death=steps('deathBenefit'),ci=steps('ciCoverage'),eci=steps('eciCoverage');
+    const ev={};
+    pols.forEach(p=>{
+      if(p.multiplierEndAge>cur&&p.multiplierEndAge<100)ev[p.multiplierEndAge]='5× MULTIPLIER ENDS';
+      const ea=endAgeOf(p);if(ea>cur&&ea<100&&!(p.maturityYear>=9000)&&p.premEndYear&&p.premEndYear<9000){
+        const lbl=(p.planName||'PLAN').toUpperCase().slice(0,22)+' ENDS';if(!ev[ea])ev[ea]=lbl;}
+    });
+    const events=Object.keys(ev).map(a=>[parseInt(a),ev[a]]).sort((x,y)=>x[0]-y[0]);
+    const ymax=niceMax(Math.max(totalAt(cur,'deathBenefit'),totalAt(cur,'ciCoverage'),1));
+    return {cur,death,ci,eci,events,ymax};
+  }
+  function renderCover(s,a1){
+    const a0=s.cur,W=940,H=336,L=60,R=210,T=40,B=42,ymax=s.ymax;
+    const pw=W-L-R,ph=H-T-B;const X=a=>L+(a-a0)/(a1-a0)*pw,Y=v=>T+ph-v/ymax*ph;
+    const lines=[{n:'Death · TPD',c:INK,w:2.6,d:'',pts:s.death},{n:'Critical illness (total)',c:TEAL,w:2.2,d:'7 4',pts:s.ci},{n:'Early CI (subset)',c:GOLD,w:1.8,d:'2 3',pts:s.eci}];
+    let out='<svg viewBox="0 0 '+W+' '+H+'">';
+    [0,ymax/2,ymax].forEach(v=>{out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v>=1e6?(v/1e6)+'M':v>=1e3?(v/1e3)+'k':v)+'</text>';});
+    for(let a=Math.ceil(a0/10)*10;a<=a1;a+=10)out+='<text x="'+X(a)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+a+'</text>';
+    out+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+    s.events.forEach((an,i)=>{const ly=(i%2===0)?(T-22):(T-9);out+='<line x1="'+X(an[0])+'" y1="'+T+'" x2="'+X(an[0])+'" y2="'+Y(0)+'" stroke="'+OX+'" stroke-width="1" stroke-dasharray="2 4"/><text x="'+X(an[0])+'" y="'+ly+'" text-anchor="middle" font-size="8.5" letter-spacing="1" fill="'+OX+'">'+esc(an[1])+'</text>';});
+    const ends=[];
+    lines.forEach(sr=>{if(!sr.pts.length)return;let dd='M'+X(sr.pts[0][0])+' '+Y(sr.pts[0][1]);for(let k=1;k<sr.pts.length;k++)dd+='L'+X(sr.pts[k][0])+' '+Y(sr.pts[k-1][1])+' L'+X(sr.pts[k][0])+' '+Y(sr.pts[k][1]);const last=sr.pts[sr.pts.length-1][1];dd+='L'+X(a1)+' '+Y(last);out+='<path d="'+dd+'" fill="none" stroke="'+sr.c+'" stroke-width="'+sr.w+'"'+(sr.d?' stroke-dasharray="'+sr.d+'"':'')+'/>';ends.push({c:sr.c,n:sr.n,v:last});});
+    const lx=W-R+10;out+='<text x="'+lx+'" y="'+(T+8)+'" font-size="9" letter-spacing="1.5" fill="'+FAINT+'">AT AGE '+a1+'</text>';
+    ends.forEach((e,i)=>{out+='<text x="'+lx+'" y="'+(T+24+i*17)+'" font-size="11" fill="'+e.c+'">'+esc(e.n)+' · <tspan class="tnum">'+(e.v>=1e6?'S$'+(e.v/1e6)+'M':SGD(e.v))+'</tspan></text>';});
+    out+='</svg>';return out;
+  }
+
+  function renderRunway(){
+    if(!pmYears.length)return '';
+    const ys=pmYears.slice().sort((a,b)=>a.year-b.year);
+    const y0=ys[0].year,y1=ys[ys.length-1].year;
+    const ymax=niceMax(Math.max.apply(null,ys.map(p=>p.total)));
+    const W=940,H=300,L=60,R=24,T=30,B=44;const pw=W-L-R,ph=H-T-B;
+    const X=y=>L+(y-y0)/(y1-y0||1)*pw,Y=v=>T+ph-v/ymax*ph;
+    let out='<svg viewBox="0 0 '+W+' '+H+'">';
+    const gstep=ymax/5;for(let v=0;v<=ymax+1;v+=gstep)out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v>=1e3?(v/1e3)+'k':v)+'</text>';
+    for(let y=Math.ceil(y0/10)*10;y<=y1;y+=10)out+='<text x="'+X(y)+'" y="'+(H-20)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+y+'</text>';
+    let area='M'+X(y0)+' '+Y(0);ys.forEach((p,i)=>{const prev=i?ys[i-1].total:p.total;area+='L'+X(p.year)+' '+Y(prev)+' L'+X(p.year)+' '+Y(p.total);});area+='L'+X(y1)+' '+Y(0)+' Z';
+    out+='<path d="'+area+'" fill="'+TEAL+'" opacity="0.16"/>';
+    let dl='';ys.forEach((p,i)=>{dl+=(i?'L'+X(p.year)+' '+Y(ys[i-1].total)+' ':'M'+X(p.year)+' '+Y(p.total)+' ')+'L'+X(p.year)+' '+Y(p.total)+' ';});
+    out+='<path d="'+dl+'" fill="none" stroke="'+INK+'" stroke-width="2.2"/>';
+    if(jointCapYr>0){out+='<line x1="'+L+'" y1="'+Y(jointCapYr)+'" x2="'+(W-R)+'" y2="'+Y(jointCapYr)+'" stroke="'+OX+'" stroke-width="1.2" stroke-dasharray="6 5"/><text x="'+(W-R)+'" y="'+(Y(jointCapYr)-7)+'" text-anchor="end" font-size="10" letter-spacing="1" fill="'+OX+'">JOINT ACCOUNT CAPACITY · '+SGD(jointCapYr)+'/YR</text>';}
+    out+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+    out+='</svg>';return out;
+  }
+
+  function renderPayout(){
+    const couponTotal=payoutPolicies.reduce((s,p)=>s+(p.couponAnnual||0),0);
+    const mats=payoutPolicies.filter(p=>p.maturityValue>0&&p.maturityYear).map(p=>[p.maturityYear,p.maturityValue]);
+    if(!couponTotal&&!mats.length)return '';
+    const y0=yNow;const y1=Math.max(yNow+5,...mats.map(m=>m[0]));
+    const ymax=niceMax(Math.max(couponTotal,...mats.map(m=>m[1]),1));
+    const W=940,H=280,L=60,R=24,T=24,B=40;const pw=W-L-R,ph=H-T-B;
+    const X=y=>L+(y-y0)/(y1-y0||1)*pw,Y=v=>T+ph-v/ymax*ph;
+    let out='<svg viewBox="0 0 '+W+' '+H+'">';
+    const gstep=ymax/4;for(let v=0;v<=ymax+1;v+=gstep)out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v>=1e3?(v/1e3)+'k':v)+'</text>';
+    for(let y=Math.ceil(y0/10)*10;y<=y1;y+=10)out+='<text x="'+X(y)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+y+'</text>';
+    const bw=Math.max(2,pw/(y1-y0)*0.6);
+    if(couponTotal>0)for(let y=y0;y<=y1;y++)out+='<rect x="'+(X(y)-bw/2)+'" y="'+Y(couponTotal)+'" width="'+bw+'" height="'+(ph*couponTotal/ymax)+'" fill="'+TEAL+'" opacity="0.85"/>';
+    mats.forEach(m=>{out+='<rect x="'+(X(m[0])-bw/2)+'" y="'+Y(m[1])+'" width="'+bw+'" height="'+(ph*m[1]/ymax)+'" fill="'+OX+'" stroke="'+PAPER+'" stroke-width="0.75"/><text x="'+X(m[0])+'" y="'+(Y(m[1])-7)+'" text-anchor="middle" font-size="10.5" fill="'+OX+'" class="tnum">'+SGD(m[1])+'</text>';});
+    out+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+    if(couponTotal>0)out+='<text x="'+X(y0+Math.min(6,y1-y0))+'" y="'+(Y(couponTotal)-7)+'" font-size="10.5" fill="'+TEAL+'" class="tnum">'+SGD(couponTotal)+' / yr coupons</text>';
+    out+='</svg>';return out;
+  }
+
+  function renderPI(){
+    if(!passivePlans.length)return '';
+    const cur=parseInt(owner.age)||30;const a0=Math.max(cur,Math.min.apply(null,passivePlans.map(p=>p.startAge||cur)));
+    const a1=100,ymax=niceMax(passivePlans.reduce((s,p)=>s+p.monthly,0));
+    const W=940,H=200,L=60,R=180,T=20,B=40;const pw=W-L-R,ph=H-T-B;
+    const X=a=>L+(a-a0)/(a1-a0)*pw,Y=v=>T+ph-v/ymax*ph;
+    const incAt=age=>passivePlans.reduce((s,p)=>s+((age>=p.startAge&&age<=p.endAge)?p.monthly:0),0);
+    let out='<svg viewBox="0 0 '+W+' '+H+'">';
+    [0,ymax/2,ymax].forEach(v=>{out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">S$'+v.toLocaleString()+'</text>';});
+    for(let a=Math.ceil(a0/10)*10;a<=a1;a+=10)out+='<text x="'+X(a)+'" y="'+(H-16)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+a+'</text>';
+    out+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+    let dd='M'+X(a0)+' '+Y(incAt(a0)),prev=incAt(a0);for(let a=a0+1;a<=a1;a++){const v=incAt(a);if(v!==prev){dd+=' L'+X(a)+' '+Y(prev)+' L'+X(a)+' '+Y(v);prev=v;}}dd+=' L'+X(a1)+' '+Y(prev);
+    out+='<path d="'+dd+' L'+X(a1)+' '+Y(0)+' L'+X(a0)+' '+Y(0)+' Z" fill="'+TEAL+'" opacity="0.14"/>';
+    out+='<path d="'+dd+'" fill="none" stroke="'+TEAL+'" stroke-width="2.4"/>';
+    const peak=incAt(a1);out+='<text x="'+(X(a1)+10)+'" y="'+(Y(peak)+4)+'" font-size="11.5" fill="'+TEAL+'">'+SGD(peak)+' / month</text>';
+    out+='</svg>';return out;
+  }
+
+  // ════ SECTION BUILDERS ════
+  const household=insureds.map(c=>{
+    const np=polByIns(c.id).length;
+    return '<div class="person"><div><div class="nm">'+esc(c.name)+'</div><div class="rl">'+(c.isChild?'Child':'Policy owner')+(c.birthYear?' · b. '+c.birthYear:'')+'</div></div>'
+      +'<div class="d">Age <b>'+esc(c.age)+'</b>'+(c.gender?' · '+esc(c.gender):'')+(c.marital?' · '+esc(c.marital):'')+'</div>'
+      +'<div class="d">Life insured on <b>'+np+'</b> '+(np===1?'policy':'policies')+'</div></div>';
+  }).join('');
+  const jointFunded=policies.filter(p=>/joint/i.test(p.source)).length;
+  const jointNote=owner.jointName?('<p class="fn" style="margin-top:18px">The <b>'+esc(owner.jointName)+'</b> holds <span class="num">'+SGD(owner.jointBalance)+'</span> and receives <span class="num">'+SGD(owner.jointTopup)+'</span> a month — <span class="num">'+SGD(owner.jointTopup*12)+'</span> a year. It funds '+jointFunded+' of the '+policies.length+' policies.</p>'):'';
+
+  const incPct=ownerYearInc?Math.round(totalAnnual/ownerYearInc*100):0;
+  const figs='<div class="figs">'
+    +'<div class="fig"><span class="caps">Annual premiums</span><div class="v num">'+SGD(totalAnnual)+'</div><div class="s">'+SGD(totalAnnual/12)+' a month</div></div>'
+    +'<div class="fig"><span class="caps">Against own income</span><div class="v">'+incPct+'<small>%</small></div><div class="s">of '+SGD(ownerYearInc)+' yearly income</div></div>'
+    +'<div class="fig"><span class="caps">Paid to date</span><div class="v num">'+SGD(oc.paidToDate)+'</div><div class="s">across all '+policies.length+' policies</div></div>'
+    +(jointCapYr?'<div class="fig"><span class="caps">Joint headroom</span><div class="v num'+((jointHeadroom||0)<0?' oxc':'')+'">'+SGD(jointHeadroom||0)+'</div><div class="s">of '+SGD(jointCapYr)+' yearly capacity</div></div>':'')
+    +'</div>';
+  const purposeTable='<table><thead><tr><th>Premiums by purpose</th><th>Yearly</th><th>Monthly</th><th>Share of income</th></tr></thead><tbody>'
+    +'<tr><td>Protection — keeping the family safe</td><td class="num">'+SGD(protPrem)+'</td><td class="num">'+SGD(protPrem/12)+'</td><td class="num">'+(ownerYearInc?(protPrem/ownerYearInc*100).toFixed(1):'0')+'%</td></tr>'
+    +'<tr><td>Wealth accumulation — building the future</td><td class="num">'+SGD(wealthPrem)+'</td><td class="num">'+SGD(wealthPrem/12)+'</td><td class="num">'+(ownerYearInc?(wealthPrem/ownerYearInc*100).toFixed(1):'0')+'%</td></tr>'
+    +'<tr class="total"><td>All premiums</td><td class="num">'+SGD(protPrem+wealthPrem)+'</td><td class="num">'+SGD((protPrem+wealthPrem)/12)+'</td><td class="num">'+(ownerYearInc?((protPrem+wealthPrem)/ownerYearInc*100).toFixed(1):'0')+'%</td></tr>'
+    +'</tbody></table>';
+  const fromSelf=oc.fromSelf||0,fromJoint=oc.fromJoint||0,paySum=(fromSelf+fromJoint)||1;
+  const whoPays='<div class="split"><span class="caps">Who pays — yearly split</span><div class="bar"><div class="seg1" style="width:'+(fromSelf/paySum*100).toFixed(0)+'%"></div><div class="seg2" style="width:'+(fromJoint/paySum*100).toFixed(0)+'%"></div></div>'
+    +'<div class="lab"><span><b class="k1">From self</b> · <span class="num">'+SGD(fromSelf)+'</span></span><span><b class="k2">From joint account</b> · <span class="num">'+SGD(fromJoint)+'</span></span></div></div>';
+
+  const snapCards=insureds.map(c=>{
+    const cv=coverages[c.id]||{};
+    const acc=polByIns(c.id).reduce((s,p)=>s+(p.accidentalDeath||0),0);
+    const hs=polByIns(c.id).filter(p=>/h&s|hospital|shield|medi/i.test((p.policyType||'')+' '+(p.category||''))).map(p=>esc(p.planName)).join(' + ')||'—';
+    const np=polByIns(c.id).length;
+    return '<div class="snap'+(c.id===owner.id?' owner':'')+'"><div class="sh"><div class="nm">'+esc(c.name)+'</div><div class="mt">Age '+esc(c.age)+' · '+(c.isChild?'child':'policy owner')+' · '+np+' policies</div></div>'
+      +'<div class="crow"><span class="l">Sum assured (base)</span><span class="v">'+SGD(cv.sumAssured)+'</span></div>'
+      +'<div class="crow"><span class="l">Death benefit</span><span class="v'+(cv.totalDeath>0?' met':' short')+'">'+SGD(cv.totalDeath)+'</span></div>'
+      +'<div class="crow"><span class="l">Total &amp; permanent disability</span><span class="v'+(cv.totalTPD>0?' met':' short')+'">'+SGD(cv.totalTPD)+'</span></div>'
+      +'<div class="crow"><span class="l">Critical illness (total)</span><span class="v'+(cv.totalCI>0?' met':' short')+'">'+SGD(cv.totalCI)+'</span></div>'
+      +'<div class="crow"><span class="l">&nbsp;&nbsp;└ Of which is Early CI</span><span class="v">'+SGD(cv.totalECI)+'</span></div>'
+      +'<div class="crow"><span class="l">Accidental death <span class="tag sup">supplementary</span></span><span class="v">'+SGD(acc)+'</span></div>'
+      +'<div class="crow"><span class="l">Hospital &amp; surgical</span><span class="hs">'+hs+'</span></div></div>';
+  }).join('');
+
+  const needCard=(title,key,basis,sub)=>{
+    const n=needs[key]||{rec:0,have:0,shortfall:0};const surplus=n.have-n.rec;const met=surplus>=0;
+    const pct=n.rec>0?Math.min(100,n.have/n.rec*100):100;
+    return '<div class="ncard'+(met?'':' short')+'"><h4>'+title+(sub?' <small>'+sub+'</small>':'')+'</h4>'
+      +'<div class="nr"><span>Recommended</span><b>'+SGD(n.rec)+'</b></div>'
+      +'<div class="nr"><span>Currently have</span><b>'+SGD(n.have)+'</b></div>'
+      +'<div class="pbar"><i class="'+(met?'':'o')+'" style="width:'+pct.toFixed(0)+'%"></i></div>'
+      +'<div class="nr"><span>'+(met?'Surplus':'Gap')+'</span><b class="'+(met?'pos':'neg')+'">'+(met?'+':'')+SGD(surplus)+'</b></div>'
+      +'<span class="nbadge '+(met?'ok':'no')+'">'+(met?'✓ Met':'Review recommended')+'</span>'
+      +'<div class="nbasis">'+basis+'</div></div>';
+  };
+  const needsBlock='<div class="needs">'+needCard('Death','death','5× yearly income + add-on')
+    +needCard('TPD','tpd','5× yearly income + add-on')
+    +needCard('ECI','eci','2× yearly income + add-on. Early CI is the early-stage subset within the CI total.','subset of CI')
+    +needCard('CI','ci','CI is the whole; early CI is the subset within it.','total, incl. early CI')+'</div>';
+
+  const benchRows=[['Death','totalDeath'],['Total &amp; permanent disability','totalTPD'],['Critical illness','totalCI'],['&nbsp;&nbsp;└ Of which is Early CI','totalECI']];
+  const benchTable='<table><thead><tr><th>Benefit</th>'+insureds.map(c=>'<th>'+esc((c.name||'').split(' ')[0])+'</th>').join('')+'</tr></thead><tbody>'
+    +benchRows.map(br=>'<tr><td>'+br[0]+'</td>'+insureds.map(c=>'<td class="num">'+SGD((coverages[c.id]||{})[br[1]])+'</td>').join('')+'</tr>').join('')
+    +'<tr><td>Accidental death <span class="sub">supplementary</span></td>'+insureds.map(c=>'<td class="num">'+SGD(polByIns(c.id).reduce((s,p)=>s+(p.accidentalDeath||0),0))+'</td>').join('')+'</tr>'
+    +'</tbody></table>';
+
+  const ownerChart='<div class="caps" style="margin-bottom:6px">'+esc(owner.name)+' · age '+esc(owner.age)+' → 100</div><div class="chart">'+renderCover(coverSeries(owner),100)+'</div>';
+  const kids=clients.filter(c=>c.isChild);
+  let kidsChart='';
+  if(kids.length){
+    const groups={};
+    kids.forEach(c=>{const s=coverSeries(c);const sig=JSON.stringify([s.death,s.ci,s.eci]);(groups[sig]=groups[sig]||{series:s,names:[]}).names.push(c.name.split(' ')[0]);});
+    kidsChart=Object.keys(groups).map(sig=>{const g=groups[sig];return '<div class="caps" style="margin:38px 0 6px">'+esc(g.names.join(' &amp; '))+' · to age 100</div><div class="chart">'+renderCover(g.series,100)+'</div>';}).join('');
+  }
+
+  const runwayChart=renderRunway();
+  const lifetimeCash=pmYears.reduce((s,p)=>s+p.total,0);
+  const compPols=policies.filter(p=>p.premEndYear&&p.premEndYear<9000&&!/single/i.test(p.premFreq)).slice().sort((a,b)=>a.premEndYear-b.premEndYear);
+  const schedRows=compPols.map(p=>{const remain=policies.filter(q=>!q.premEndYear||q.premEndYear>p.premEndYear).reduce((s,q)=>s+q.annualPrem,0);return '<div class="row"><span class="yr">'+p.premEndYear+'</span><span class="what">'+esc(p.planName)+'</span><span class="amt">→ '+SGD(remain)+'/yr</span></div>';}).join('');
+  const sched=schedRows?'<div style="margin-top:34px"><span class="caps">Completion schedule — what finishes paying, and the bill that remains</span><div class="sched" style="margin-top:10px">'+schedRows+'</div></div>':'';
+
+  const wealthPols=policies.filter(p=>isWealth(p));
+  let wealthSection='';
+  if(wealthPols.length){
+    const couponTotal=payoutPolicies.reduce((s,p)=>s+(p.couponAnnual||0),0);
+    const matTotal=payoutPolicies.reduce((s,p)=>s+(p.maturityValue||0),0)||maturityData.reduce((s,m)=>s+(m.nonGuaranteedVal||m.totalIllustrated||0),0);
+    const lastMat=Math.max(yNow,...payoutPolicies.filter(p=>p.maturityYear).map(p=>p.maturityYear));
+    const couponsLife=couponTotal*Math.max(0,lastMat-yNow);
+    const lifeInflow=couponsLife+matTotal;
+    const cashIn=maturityData.reduce((s,m)=>s+(m.paidToDate||0)+(m.remainingPrem||0),0)||wealthPrem;
+    const retMult=cashIn&&lifeInflow?(lifeInflow/cashIn):0;
+    const mini='<div class="mini">'
+      +'<div class="m"><span class="caps">Projected maturity</span><div class="v num">'+SGD(matTotal)+'</div><div class="s">non-guaranteed</div></div>'
+      +(couponTotal?'<div class="m"><span class="caps">Coupons / dividends</span><div class="v num">'+SGD(couponTotal)+'</div><div class="s">a year</div></div>':'')
+      +(lifeInflow?'<div class="m"><span class="caps">Lifetime inflow</span><div class="v num">'+SGD(lifeInflow)+'</div><div class="s">coupons + maturity</div></div>':'')
+      +(retMult?'<div class="m"><span class="caps">Return on cash</span><div class="v tc">'+retMult.toFixed(1)+'×</div><div class="s">vs wealth premiums paid</div></div>':'')
+      +'</div>';
+    const matRows=maturityData.map(m=>'<tr><td>'+esc(m.planName)+' <span class="sub">'+esc(m.insuredName)+' · '+esc(m.insurer)+'</span></td><td class="num">'+(m.annualPrem?SGD(m.annualPrem):'—')+'</td><td class="num">'+(m.maturityYear||'—')+'</td><td class="num">'+SGD(m.guaranteedVal)+'</td><td class="num tc">'+(m.nonGuaranteedVal||m.totalIllustrated?SGD(m.nonGuaranteedVal||m.totalIllustrated):'<i style="color:#8a6a1f">pending</i>')+'</td></tr>').join('');
+    const matTable=maturityData.length?'<div class="caps subcap">Maturity schedule — per plan</div><table><thead><tr><th>Plan · insured</th><th>Yearly premium</th><th>Finishes</th><th>Guaranteed</th><th>Non-guaranteed</th></tr></thead><tbody>'+matRows+'<tr class="total"><td>Total</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.annualPrem||0),0))+'</td><td></td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.guaranteedVal||0),0))+'</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.nonGuaranteedVal||m.totalIllustrated||0),0))+'</td></tr></tbody></table><p class="fn">Guaranteed value is typically S$0 for investment-linked plans by nature — returns depend on fund performance. <b>[ADVISOR: confirm projections]</b></p>':'';
+    const payoutChart=renderPayout();
+    const payoutBlock=payoutChart?'<div class="caps subcap">Payout milestone — coupons, then maturity</div><div class="chart">'+payoutChart+'</div><p class="chartcap">Projected coupons accumulate from now, with maturity lump sums on their projected years. Non-guaranteed.</p>':'';
+    const piChart=renderPI();
+    const piBlock=piChart?'<div class="caps subcap">Passive income — if coupons are switched on</div><div class="chart">'+piChart+'</div><p class="chartcap">Were the dividends drawn instead of reinvested, monthly passive income would build as each plan’s payout switches on. Non-guaranteed; subject to fund performance.</p>':'';
+    wealthSection='<section id="wealth"><div class="page"><span class="snum">06</span><h2>Wealth &amp; payouts</h2>'
+      +'<p class="lede">'+num2word(wealthPols.length)+' investment-linked / wealth plans build the family’s future. All figures are non-guaranteed projections. <b>[ADVISOR: refine narrative]</b></p>'
+      +mini+matTable+payoutBlock+piBlock+'</div></section>';
+  }
+
+  const notes=[];
+  if(needs.ci&&(needs.ci.have-needs.ci.rec)>=0)notes.push([false,'<b>Critical illness meets the benchmark.</b> Total CI cover of '+SGD(needs.ci.have)+' against the '+SGD(needs.ci.rec)+' benchmark — early CI is the subset within it, not an extra layer.']);
+  if(jointCapYr>0&&(jointHeadroom||0)<jointCapYr*0.1)notes.push([false,'<b>Watch the joint account.</b> '+SGD(jointCapYr-(jointHeadroom||0))+' of its '+SGD(jointCapYr)+' yearly top-up is committed — '+Math.round((jointCapYr-(jointHeadroom||0))/jointCapYr*100)+'% utilised, '+SGD(jointHeadroom||0)+' of slack.']);
+  if(afford.total&&afford.total.pct>1)notes.push([false,'<b>Premiums exceed income by design — keep it deliberate.</b> Total premiums equal '+Math.round(afford.total.pct*100)+'% of yearly income. Sustainable only while the joint-account contribution holds; revisit if circumstances change.']);
+  wealthPols.filter(p=>!payoutPolicies.find(q=>q.maturityValue>0&&normCol(q.plan)===normCol(p.planName))).forEach(p=>{if(!maturityData.find(m=>normCol(m.planName)===normCol(p.planName)&&(m.nonGuaranteedVal||m.totalIllustrated)))notes.push([true,'<b>Obtain the '+esc(p.planName)+' illustration.</b> No projected maturity value on file, so its share of the wealth picture can’t yet be measured.']);});
+  policies.filter(p=>!String(p.policyNo).trim()).forEach(p=>notes.push([true,'<b>Complete '+esc(p.planName)+'’s record.</b> No policy number captured yet — to be added at the next meeting.']));
+  policies.filter(p=>p.premEndYear&&p.premEndYear<9000&&p.premEndYear<=yNow+1).forEach(p=>notes.push([true,'<b>'+esc(p.planName)+' finishes paying soon</b> ('+p.premEndYear+'). Confirm the client is aware the cover/premium changes.']));
+  policies.filter(p=>String(p.status).toLowerCase()==='lapsed').forEach(p=>notes.push([true,'<b>'+esc(p.planName)+' is lapsed.</b> Review whether to reinstate or replace.']));
+  insureds.forEach(c=>{const cv=coverages[c.id]||{};if(!c.isChild&&cv.totalCI===0)notes.push([true,'<b>No critical-illness cover for '+esc(c.name.split(' ')[0])+'.</b> Worth reviewing.']);});
+  if(!notes.length)notes.push([false,'<b>No outstanding flags.</b> The register is complete and benchmarks are met on current data.']);
+  const notesBlock='<div class="notes">'+notes.map(n=>'<div class="note'+(n[0]?' flag':'')+'"><p>'+n[1]+'</p></div>').join('')+'</div>';
+
+  const register=insureds.map(c=>{
+    const pols=polByIns(c.id);if(!pols.length)return '';
+    const cards=pols.map(p=>{
+      const wl=isWealth(p);
+      const chips='<span class="pchip ins">'+esc(p.insurer)+'</span>'+(p.policyType?'<span class="pchip">'+esc(p.policyType)+'</span>':'')+(p.cpf?'<span class="pchip cpf">CPF / Medisave</span>':'');
+      let psec='<div class="psec"><div class="prow"><span class="l">Annual premium</span><span class="v">'+SGD2(p.annualPrem)+'</span></div>'
+        +'<div class="prow"><span class="l">Pays until</span><span class="v">'+payUntil(p)+'</span></div>'
+        +'<div class="prow"><span class="l">Funded by</span><span class="v">'+esc(p.source)+(p.cpf?' + CPF':'')+'</span></div>';
+      const mat=maturityData.find(m=>normCol(m.planName)===normCol(p.planName));
+      if(wl&&mat&&(mat.nonGuaranteedVal||mat.totalIllustrated))psec+='<div class="prow"><span class="l">Projected maturity</span><span class="v">'+SGD(mat.nonGuaranteedVal||mat.totalIllustrated)+'</span></div>';
+      psec+='</div>';
+      let bsec='';const brows=[];
+      if(p.deathBenefit||p.tpdBenefit)brows.push('<div class="prow"><span class="l">Death / TPD</span><span class="v">'+SGD(p.deathBenefit)+' / '+SGD(p.tpdBenefit)+'</span></div>');
+      if(p.ciCoverage||p.eciCoverage)brows.push('<div class="prow"><span class="l">CI / ECI</span><span class="v">'+SGD(p.ciCoverage)+' / '+SGD(p.eciCoverage)+'</span></div>');
+      if(p.sumAssured)brows.push('<div class="prow"><span class="l">Base sum assured</span><span class="v">'+SGD(p.sumAssured)+'</span></div>');
+      if(p.multiplierEndAge)brows.push('<div class="prow"><span class="l">Multiplier ends</span><span class="v">age '+p.multiplierEndAge+'</span></div>');
+      if(p.accidentalDeath)brows.push('<div class="prow"><span class="l">Accidental death</span><span class="v">'+SGD(p.accidentalDeath)+'</span></div>');
+      if(brows.length)bsec='<div class="psec">'+brows.join('')+'</div>';
+      const riders=p.riders?'<div class="riders"><b>Riders:</b> '+esc(p.riders)+'</div>':'';
+      const rem=p.remarks?'<div class="rem">'+esc(p.remarks)+'</div>':'';
+      return '<div class="pol'+(wl?' wealth':'')+'"><span class="pstatus">'+esc(p.status)+'</span><div class="ptop">'+chips+'</div><h4>'+esc(p.planName)+'</h4><div class="pno">'+last4(p.policyNo)+'</div>'+psec+bsec+riders+rem+'</div>';
+    }).join('');
+    return '<div class="acc'+(c.id===owner.id?' owner open':'')+'"><div class="acc-head" onclick="this.parentNode.classList.toggle(\'open\')"><div><h3>'+esc(c.name)+'</h3><div class="s3">Age '+esc(c.age)+' · '+(c.isChild?'child':'policy owner')+' · '+pols.length+' policies</div></div><span class="arr">▼</span></div><div class="acc-body"><div class="polgrid">'+cards+'</div></div></div>';
+  }).join('');
+
+  // ════ ASSEMBLE OUTPUT ════
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
++'<title>'+esc(owner.name)+' — Policy Review, '+esc(reportMonth)+'</title>\n'
++'<link rel="preconnect" href="https://fonts.googleapis.com">\n'
++'<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Archivo:wght@400;500;600&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet">\n'
++'<style>\n'
++':root{--paper:#F7F3EC;--paper2:#F1ECE2;--card:#FBF8F2;--ink:#1F1B16;--ink2:#57503F;--faint:#8B8270;--rule:#D9D1C0;--rule2:#C4BAA5;--ox:#8A3324;--oxsoft:#B8634F;--teal:#1F6F6B;--tealsoft:#5B9C97;--tealbg:#E4EDEA;--gold:#C99A3F;--goldsoft:#E0C589;--goldbg:#F3EAD4}\n'
++'*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background:var(--paper);color:var(--ink);font:15px/1.65 "Archivo",sans-serif}\n'
++'.page{max-width:1020px;margin:0 auto;padding:0 36px}@media(max-width:640px){.page{padding:0 20px}}\n'
++'.serif{font-family:"Fraunces",serif}.num{font-family:"Spline Sans Mono",monospace;font-variant-numeric:tabular-nums}\n'
++'.caps{font-family:"Archivo",sans-serif;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint)}\n'
++'.oxc{color:var(--ox)}.tc{color:var(--teal)}.gc{color:var(--gold)}\n'
++'.drule{border-top:3px solid var(--ink);position:relative;margin-top:4px}.drule::after{content:"";display:block;border-top:1px solid var(--ink);margin-top:2px}\n'
++'.mast{padding:54px 0 0}.mast .topline{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-bottom:10px}\n'
++'.mast h1{font-family:"Fraunces",serif;font-weight:500;font-size:64px;line-height:1.02;letter-spacing:-.015em;margin:30px 0 0}@media(max-width:640px){.mast h1{font-size:42px}}\n'
++'.standfirst{font-family:"Fraunces",serif;font-style:italic;font-weight:400;font-size:21px;line-height:1.5;color:var(--ink2);max-width:48ch;margin:22px 0 30px}\n'
++'.mast .who{display:flex;flex-wrap:wrap;gap:6px 34px;padding:14px 0 40px;border-top:1px solid var(--rule);font-size:13px;color:var(--ink2)}.mast .who b{color:var(--ink);font-weight:600}\n'
++'nav{position:sticky;top:0;background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(6px);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);z-index:50}\n'
++'nav .page{display:grid;grid-template-columns:repeat(4,auto);justify-content:center;justify-items:center;column-gap:36px;padding-top:0;padding-bottom:0}\n'
++'nav a{font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--faint);text-decoration:none;padding:11px 0 9px;border-bottom:2px solid transparent;white-space:nowrap}\n'
++'nav a.on{color:var(--ink);border-bottom-color:var(--ox)}nav a:hover{color:var(--ink)}@media(max-width:640px){nav .page{grid-template-columns:repeat(2,auto);column-gap:24px}}\n'
++'section{padding:58px 0 8px}.snum{font-family:"Spline Sans Mono",monospace;font-size:12px;color:var(--ox);letter-spacing:.1em}\n'
++'h2{font-family:"Fraunces",serif;font-weight:500;font-size:34px;letter-spacing:-.01em;margin:6px 0 0}\n'
++'.lede{font-family:"Fraunces",serif;font-style:italic;font-size:17.5px;line-height:1.6;color:var(--ink2);max-width:62ch;margin:14px 0 30px}.lede .num{font-style:normal;font-size:15.5px}.subcap{margin:34px 0 14px}\n'
++'.figs{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:6px 0 26px}\n'
++'.fig{flex:1 1 200px;padding:18px 26px 20px 0;border-right:1px solid var(--rule)}.fig:last-child{border-right:0}.fig+.fig{padding-left:26px}\n'
++'.fig .v{font-family:"Fraunces",serif;font-weight:500;font-size:34px;letter-spacing:-.01em;margin-top:6px}.fig .v small{font-size:16px;color:var(--faint);font-weight:400}.fig .s{font-size:12.5px;color:var(--ink2);margin-top:3px}\n'
++'@media(max-width:760px){.fig{flex:1 1 46%;border-right:0;padding-left:0!important}}\n'
++'.person{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:18px;padding:20px 0;border-bottom:1px solid var(--rule);align-items:baseline}.person:first-of-type{border-top:1px solid var(--rule)}@media(max-width:700px){.person{grid-template-columns:1fr}}\n'
++'.person .nm{font-family:"Fraunces",serif;font-size:22px;font-weight:500}.person .rl{font-size:12.5px;color:var(--faint);margin-top:2px}.person .d{font-size:13.5px;color:var(--ink2)}.person .d b{color:var(--ink);font-weight:600}\n'
++'table{width:100%;border-collapse:collapse;font-size:13.5px}thead th{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);font-weight:500;text-align:right;padding:0 10px 8px;border-bottom:1px solid var(--ink)}thead th:first-child{text-align:left;padding-left:0}\n'
++'tbody td{padding:9px 10px;border-bottom:1px solid var(--rule);text-align:right;vertical-align:top}tbody td:first-child{text-align:left;padding-left:0}tbody tr.total td{border-top:1px solid var(--ink);border-bottom:none;font-weight:600;padding-top:11px}\n'
++'td .sub{display:block;font-size:11.5px;color:var(--faint);font-style:italic;margin-top:1px}.fn{font-size:12px;color:var(--ink2);line-height:1.6;margin-top:14px;max-width:76ch}.fn sup{color:var(--ox)}\n'
++'.split{margin:26px 0 8px}.split .bar{display:flex;height:34px;border:1px solid var(--ink)}.split .seg1{background:var(--ink)}.split .seg2{background:var(--teal)}\n'
++'.split .lab{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:12.5px;color:var(--ink2);margin-top:7px}.split .lab b{color:var(--ink)}.split .lab .k1{color:var(--ink)}.split .lab .k2{color:var(--teal)}\n'
++'.snapgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:6px 0 8px}@media(max-width:820px){.snapgrid{grid-template-columns:1fr}}\n'
++'.snap{border:1px solid var(--rule);background:var(--card)}.snap .sh{background:var(--ink);color:var(--paper);padding:13px 16px}.snap.owner .sh{background:var(--teal)}\n'
++'.snap .sh .nm{font-family:"Fraunces",serif;font-size:18px;font-weight:500}.snap .sh .mt{font-size:11px;color:rgba(255,255,255,.72);margin-top:2px;letter-spacing:.02em}\n'
++'.crow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--rule);font-size:13px}.crow:last-child{border-bottom:0}.crow .l{color:var(--ink2)}\n'
++'.crow .v{font-family:"Spline Sans Mono",monospace;font-weight:500}.crow .v.met{color:var(--teal)}.crow .v.short{color:var(--ox)}.crow .hs{font-size:12px;color:var(--teal);text-align:right;font-weight:500}\n'
++'.tag{font-size:10px;letter-spacing:.04em;padding:2px 7px;border-radius:2px;font-family:"Archivo",sans-serif}.tag.sup{background:var(--goldbg);color:#8a6a1f}\n'
++'.needs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:8px}@media(max-width:820px){.needs{grid-template-columns:1fr 1fr}}@media(max-width:480px){.needs{grid-template-columns:1fr}}\n'
++'.ncard{background:var(--card);border:1px solid var(--rule);border-top:3px solid var(--teal);padding:15px 16px}.ncard.short{border-top-color:var(--ox)}\n'
++'.ncard h4{font-family:"Fraunces",serif;font-size:16px;font-weight:500}.ncard h4 small{font-family:"Archivo";font-size:11px;color:var(--faint);font-weight:400}\n'
++'.nr{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;color:var(--ink2)}.nr b{font-family:"Spline Sans Mono",monospace;font-weight:500;color:var(--ink)}.nr .pos{color:var(--teal)}.nr .neg{color:var(--ox)}\n'
++'.pbar{height:4px;background:var(--paper2);border:1px solid var(--rule);margin:9px 0 7px;overflow:hidden}.pbar i{display:block;height:100%;background:var(--teal)}.pbar i.o{background:var(--ox)}\n'
++'.nbadge{display:inline-block;font-size:10.5px;letter-spacing:.05em;padding:3px 9px;border-radius:2px}.nbadge.ok{background:var(--tealbg);color:var(--teal)}.nbadge.no{background:#F4E2DC;color:var(--ox)}.nbasis{font-size:11px;color:var(--faint);font-style:italic;margin-top:8px;line-height:1.5}\n'
++'.chart{margin:10px 0 6px}.chart svg{width:100%;height:auto;display:block}.chartcap{font-size:12px;color:var(--ink2);font-style:italic;max-width:74ch;margin:10px 0 0}svg text{font-family:"Archivo",sans-serif}svg .tnum{font-family:"Spline Sans Mono",monospace}\n'
++'.sched{columns:2;column-gap:54px;margin-top:8px}@media(max-width:700px){.sched{columns:1}}.sched .row{display:flex;gap:14px;padding:7px 0;border-bottom:1px solid var(--rule);break-inside:avoid;font-size:13.5px}.sched .yr{font-family:"Spline Sans Mono",monospace;color:var(--ox);min-width:46px}.sched .what{flex:1;color:var(--ink2)}.sched .amt{font-family:"Spline Sans Mono",monospace;white-space:nowrap}\n'
++'.mini{display:flex;flex-wrap:wrap;gap:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);margin:6px 0 22px}.mini .m{flex:1 1 150px;padding:14px 22px 16px 0;border-right:1px solid var(--rule)}.mini .m:last-child{border-right:0}.mini .m+.m{padding-left:22px}.mini .v{font-family:"Fraunces",serif;font-weight:500;font-size:27px;margin-top:4px}.mini .s{font-size:12px;color:var(--ink2);margin-top:2px}@media(max-width:760px){.mini .m{flex:1 1 45%;border-right:0;padding-left:0!important}}\n'
++'.notes{counter-reset:n;max-width:76ch}.note{counter-increment:n;display:flex;gap:18px;padding:16px 0;border-bottom:1px solid var(--rule)}.note::before{content:counter(n,decimal-leading-zero);font-family:"Spline Sans Mono",monospace;font-size:13px;color:var(--ox);padding-top:2px}.note p{font-size:14.5px;line-height:1.62;color:var(--ink2)}.note b{color:var(--ink);font-weight:600}.note.flag::before{color:var(--gold)}\n'
++'.acc{margin-bottom:14px;border:1px solid var(--rule)}.acc-head{display:flex;justify-content:space-between;align-items:center;background:var(--ink);color:var(--paper);padding:13px 18px;cursor:pointer;user-select:none}.acc.owner .acc-head{background:var(--teal)}\n'
++'.acc-head h3{font-family:"Fraunces",serif;font-weight:500;font-size:18px}.acc-head .s3{font-size:11px;color:rgba(255,255,255,.72);margin-top:2px}.acc-head .arr{font-size:11px;letter-spacing:.1em;transition:transform .2s}.acc.open .acc-head .arr{transform:rotate(180deg)}\n'
++'.acc-body{display:none;padding:16px;background:var(--paper2)}.acc.open .acc-body{display:block}.polgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}@media(max-width:760px){.polgrid{grid-template-columns:1fr}}\n'
++'.pol{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--teal);padding:14px 16px;font-size:12.5px;position:relative}.pol.wealth{border-left-color:var(--gold)}\n'
++'.pol .ptop{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px;padding-right:60px}.pchip{font-size:10px;letter-spacing:.03em;padding:2px 7px;border-radius:2px;background:var(--paper2);color:var(--ink2);border:1px solid var(--rule)}.pchip.ins{background:var(--tealbg);color:var(--teal);border-color:transparent}.pchip.cpf{background:var(--goldbg);color:#8a6a1f;border-color:transparent}\n'
++'.pstatus{position:absolute;top:13px;right:14px;font-size:10px;letter-spacing:.05em;color:var(--teal)}.pol h4{font-family:"Fraunces",serif;font-size:15.5px;font-weight:500;line-height:1.25}.pol .pno{font-family:"Spline Sans Mono",monospace;font-size:10.5px;color:var(--faint);margin:2px 0 8px}\n'
++'.pol .psec{border-top:1px solid var(--rule);margin-top:8px;padding-top:8px}.prow{display:flex;justify-content:space-between;padding:2.5px 0}.prow .l{color:var(--ink2)}.prow .v{font-family:"Spline Sans Mono",monospace;font-weight:500}\n'
++'.pol .riders{font-size:11.5px;margin-top:8px;color:var(--ink2)}.pol .riders b{font-weight:600;color:var(--ink)}.pol .rem{font-size:11.5px;font-style:italic;color:var(--faint);margin-top:6px;line-height:1.5}\n'
++'footer{margin-top:70px;padding:26px 0 60px;border-top:1px solid var(--rule)}footer .drule{margin-bottom:18px}footer p{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);text-align:center}\n'
++'#printbtn{position:fixed;top:12px;right:16px;z-index:60;background:var(--ink);color:var(--paper);border:0;padding:8px 14px;font:600 11px "Archivo";letter-spacing:.1em;text-transform:uppercase;cursor:pointer}\n'
++'@media print{nav,#printbtn{display:none}body{background:#fff}section{padding:30px 0 0;break-inside:avoid-page}.acc-body{display:block!important}}\n'
++'</style>\n</head>\n<body>\n'
++'<button id="printbtn" onclick="window.print()">Print / PDF</button>\n'
++'<header class="mast"><div class="page"><div class="drule"></div>'
++'<div class="topline" style="margin-top:10px"><span class="caps">Client Policy Review · '+esc(reportMonth)+'</span><span class="caps">Strictly confidential</span></div>'
++'<h1>'+esc(owner.name)+'<span class="oxc">.</span></h1>'
++'<p class="standfirst">'+cap(num2word(policies.length))+' active policies across one household — what they cost, what they cover, where it is paid from, and what they may one day return. Figures drawn from the consolidation workbook, in Singapore dollars.</p>'
++'<div class="who"><span>Age <b>'+esc(owner.age)+'</b></span>'+(owner.occupation?'<span>Occupation <b>'+esc(owner.occupation)+'</b></span>':'')
++'<span>Income <b class="num">'+SGD(owner.income)+'</b> /mo</span><span>Expenses <b class="num">'+SGD(owner.expenses)+'</b> /mo</span><span>Liabilities <b class="num">'+SGD(owner.liabilities)+'</b></span>'
++(owner.jointTopup?'<span>Joint top-up <b class="num">'+SGD(owner.jointTopup*12)+'</b> /yr</span>':'')+'</div></div></header>\n'
++'<nav><div class="page"><a href="#household">The household</a><a href="#cost">Where the money goes</a><a href="#cover">What is covered</a><a href="#age">Cover over time</a><a href="#runway">The premium runway</a>'+(wealthSection?'<a href="#wealth">Wealth &amp; payouts</a>':'')+'<a href="#notes">Notes &amp; actions</a><a href="#register">Policy register</a></div></nav>\n'
++'<main>\n'
++'<section id="household"><div class="page"><span class="snum">01</span><h2>The household</h2><p class="lede">'+(kids.length?'One policy owner and '+num2word(kids.length)+' '+(kids.length===1?'child':'children')+'.':'Policy owner household.')+' Every policy in this review is owned by '+esc(owner.name.split(' ')[0])+'. <b>[ADVISOR: refine]</b></p>'+household+jointNote+'</div></section>\n'
++'<section id="cost"><div class="page"><span class="snum">02</span><h2>Where the money goes</h2><p class="lede">Premiums across the household total <span class="num">'+SGD(totalAnnual)+'</span> a year'+(ownerYearInc&&totalAnnual>ownerYearInc?' — just over '+esc(owner.name.split(' ')[0])+'’s entire income':'')+'. <b>[ADVISOR: refine]</b></p>'+figs+purposeTable+whoPays+'</div></section>\n'
++'<section id="cover"><div class="page"><span class="snum">03</span><h2>What is covered</h2><p class="lede">Each life insured at a glance, then the needs calculator behind the verdict. Critical illness is read as a whole — early CI is the subset within it.</p><div class="caps subcap" style="margin-top:0">Coverage snapshot — by insured</div><div class="snapgrid">'+snapCards+'</div><div class="caps subcap">Coverage needs calculator — '+esc(owner.name)+'</div>'+needsBlock+'<div class="caps subcap">Benchmark detail</div>'+benchTable+'</div></section>\n'
++'<section id="age"><div class="page"><span class="snum">04</span><h2>How cover changes with age</h2><p class="lede">Protection is not static. Coverage steps down as term plans complete and multipliers expire — mapped here so the transitions never surprise. <b>[ADVISOR: refine]</b></p>'+ownerChart+kidsChart+'<p class="chartcap">Modelled from each policy’s term-end and multiplier-end ages in the workbook. Critical-illness cover always sits at or above early-CI — early-CI is the subset of it.</p></div></section>\n'
++'<section id="runway"><div class="page"><span class="snum">05</span><h2>The premium runway</h2><p class="lede">The heavy years are now. Cash premiums fall away in steps as each plan completes. Lifetime cash outlay from here: <span class="num">'+SGD(lifetimeCash)+'</span>. <b>[ADVISOR: refine]</b></p>'+(runwayChart?'<div class="chart">'+runwayChart+'</div><p class="chartcap">Cash premiums by year, per the workbook’s projection. The joint account’s '+SGD(jointCapYr)+' yearly capacity is marked.</p>':'<p class="chartcap">No payment-milestone timeline found in the workbook.</p>')+sched+'</div></section>\n'
++wealthSection+'\n'
++'<section id="notes"><div class="page"><span class="snum">07</span><h2>Notes &amp; actions</h2><p class="lede">Things worth attending to, in rough order of importance. <b>[ADVISOR: review &amp; refine]</b></p>'+notesBlock+'</div></section>\n'
++'<section id="register"><div class="page"><span class="snum">Appendix</span><h2>Policy register</h2><p class="lede">All '+policies.length+' policies, grouped by life insured — tap a name to open. Teal edge = protection · gold edge = wealth accumulation.</p>'+register+'</div></section>\n'
++'</main>\n'
++'<footer><div class="page"><div class="drule"></div><p>Prepared '+esc(reportMonth)+' · Strictly confidential — for client review only · All figures in Singapore dollars · Non-guaranteed values are projections</p></div></footer>\n'
++'<script>\n'
++'(function(){var links=document.querySelectorAll("nav a");var secs=[].map.call(links,function(a){return document.querySelector(a.getAttribute("href"))});'
++'var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(a){a.classList.toggle("on",a.getAttribute("href")==="#"+e.target.id)});}});},{rootMargin:"-30% 0px -60% 0px"});'
++'secs.forEach(function(s){if(s)io.observe(s)});})();\n'
++'<\/script>\n</body>\n</html>';
+}
+</script>
+</body>
+</html>
