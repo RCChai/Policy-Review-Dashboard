@@ -360,7 +360,7 @@ function buildDashboardHTML(d){
   const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const SGD=n=>'S$'+Math.round(Number(n)||0).toLocaleString('en-SG');
   const SGD2=n=>'S$'+(Number(n)||0).toLocaleString('en-SG',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const last4=no=>{no=String(no||'').trim();return no?'no. •••• '+no.slice(-4):'no. not recorded';};
+  const last4=no=>{no=String(no||'').trim();return no?'no. '+no:'no. not recorded';};
   const num2word=n=>{const w=['zero','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];return n<=20?w[n]:String(n);};
   const cap=s=>{s=String(s||'');return s.charAt(0).toUpperCase()+s.slice(1);};
   const isWealth=p=>/wealth|accumulat/i.test(p.category)||/ilp|invest|endow|annuit|saving|retire/i.test((p.policyType||'')+' '+(p.category||''));

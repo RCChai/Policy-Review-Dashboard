@@ -96,7 +96,7 @@ contact/ID data, by design (see `SKILL.md` → *Never display — client privacy
 
 - No NRIC/FIN, no email, no mobile/handphone, no home address — ever.
 - DOB is used only for age maths; client-facing figures show age, not full DOB.
-- Policy numbers are masked to the last 4 digits (`no. •••• 1234`).
+- Policy numbers ARE shown (they are not treated as PII).
 - The bundled sample (`reference/example-editorial-dashboard.html`) is **fully fictional** —
   the "Jordan Lee Wei Han" family, figures, and masked policy numbers contain no real data.
 - `.gitignore` blocks `*.xlsx`, generated client dashboards, and `_backups/` so real client

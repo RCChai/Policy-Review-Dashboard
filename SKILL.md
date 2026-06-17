@@ -120,7 +120,7 @@ The dashboard is shared with the client and may end up emailed, printed, or stor
 - **No NRIC / FIN**, no email address, no mobile/handphone number, no home/mailing address.
 - Read these columns only when logic needs them (e.g. age from DOB) but **never render them**.
   Show age, not full date of birth, in any client-facing figure where DOB isn't essential.
-- Mask policy numbers to the last 4 digits (`no. •••• 1234`) — never print the full number.
+- Policy numbers ARE allowed — print them in full (`no. 1234567890`); they are not PII.
 - Beneficiary entries show **role + share** (e.g. "Spouse · 50%"), not the beneficiary's NRIC.
 If a section template would surface any of the above, drop the field. The included sample
 (`reference/example-editorial-dashboard.html`) is fully anonymised and is the privacy baseline.

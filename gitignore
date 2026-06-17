@@ -1,0 +1,35 @@
+# ── Client data — never commit ────────────────────────────────
+# Source workbooks and any filled consolidation templates
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+
+# Generated client dashboards (anything but the anonymised reference sample)
+*_Policy_Review*.html
+*_Dashboard_*.html
+*Policy_Review_v2.html
+!reference/example-editorial-dashboard.html
+
+# Backups, lock files, client folders
+_backups/
+**/_backups/
+~$*
+*.tmp
+Client*/
+clients/
+
+# Local test scaffolding / scratch (never commit)
+_*.html
+_*.js
+_*.png
+_*.b64
+_*.txt
+
+# ── OS / editor noise ─────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
