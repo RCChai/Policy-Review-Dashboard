@@ -68,13 +68,6 @@ body{font-family:"Archivo",sans-serif;background:var(--paper);color:var(--ink);m
     </div>
   </div>
 
-  <div class="step">
-    <div class="step-label">Step 2 — Enter Access Password</div>
-    <input type="password" class="pw-input" id="pwInput" placeholder="DDMMYYYY" maxlength="8" oninput="checkPw()" autocomplete="off">
-    <div class="pw-hint">Password = Policy owner's date of birth in DDMMYYYY format</div>
-    <div class="pw-status" id="pwStatus"></div>
-  </div>
-
   <hr class="divider">
 
   <button class="btn btn-teal" id="generateBtn" onclick="generate()" disabled>Generate Dashboard</button>
@@ -88,7 +81,7 @@ body{font-family:"Archivo",sans-serif;background:var(--paper);color:var(--ink);m
 </div>
 
 <script>
-let workbook=null, ownerDOB=null, parsedData=null;
+let workbook=null, parsedData=null;
 
 const dz=document.getElementById('dropZone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over')});
@@ -106,24 +99,15 @@ function handleFile(file){
     try{
       workbook=XLSX.read(e.target.result,{type:'array',cellDates:false});
       parsedData=parseWorkbook(workbook);
-      ownerDOB=parsedData.ownerDOB;
       setProgress(60);
       setStatus('info','✓ Loaded: '+parsedData.ownerName+' · '+parsedData.policies.length+' policies');
       setProgress(100);
-      document.getElementById('pwInput').focus();checkPw();
+      document.getElementById('generateBtn').disabled=false;
     }catch(err){setStatus('error','⚠ Could not parse file. Check it matches the template. '+err.message);setProgress(0);console.error(err);}
   };
   reader.readAsArrayBuffer(file);
 }
 
-function checkPw(){
-  const pw=document.getElementById('pwInput').value.trim();
-  const s=document.getElementById('pwStatus'),btn=document.getElementById('generateBtn');
-  if(!workbook){btn.disabled=true;return;}
-  if(!pw){s.style.display='none';btn.disabled=true;return;}
-  if(pw===ownerDOB){s.className='pw-status ok';s.textContent='✓ Access granted';s.style.display='block';btn.disabled=false;}
-  else{s.className='pw-status fail';s.textContent='✗ Incorrect password';s.style.display='block';btn.disabled=true;}
-}
 
 function generate(){
   if(!parsedData)return;
