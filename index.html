@@ -420,18 +420,26 @@ function buildDashboardHTML(d){
     const couponTotal=payoutPolicies.reduce((s,p)=>s+(p.couponAnnual||0),0);
     const mats=payoutPolicies.filter(p=>p.maturityValue>0&&p.maturityYear).map(p=>[p.maturityYear,p.maturityValue]);
     if(!couponTotal&&!mats.length)return '';
+    mats.sort((a,b)=>a[0]-b[0]);
     const y0=yNow;const y1=Math.max(yNow+5,...mats.map(m=>m[0]));
     const ymax=niceMax(Math.max(couponTotal,...mats.map(m=>m[1]),1));
-    const W=940,H=280,L=60,R=24,T=24,B=40;const pw=W-L-R,ph=H-T-B;
-    const X=y=>L+(y-y0)/(y1-y0||1)*pw,Y=v=>T+ph-v/ymax*ph;
+    /* compact "k" label keeps short bars from being blocked; whole values drop the ".0" (72.0 -> 72) */
+    const kfmt=n=>{let s=(n/1000).toFixed(1);if(s.slice(-2)==='.0')s=s.slice(0,-2);return 'S$'+s+'k'};
+    const W=940,H=300,L=40,R=24,T=30,B=58,inset=30;const pw=W-L-R,ph=H-T-B;
+    const X=y=>L+inset+(y-y0)/(y1-y0||1)*(pw-inset),Y=v=>T+ph-v/ymax*ph;
     let out='<svg viewBox="0 0 '+W+' '+H+'">';
-    const gstep=ymax/4;for(let v=0;v<=ymax+1;v+=gstep)out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="'+FAINT+'" class="tnum">'+(v>=1e3?(v/1e3)+'k':v)+'</text>';
-    for(let y=Math.ceil(y0/10)*10;y<=y1;y+=10)out+='<text x="'+X(y)+'" y="'+(H-18)+'" text-anchor="middle" font-size="11" fill="'+FAINT+'" class="tnum">'+y+'</text>';
-    const bw=Math.max(2,pw/(y1-y0)*0.6);
+    /* faint gridlines only — value-axis numbers dropped (redundant; every bar is labelled with its own amount) */
+    const gstep=ymax/4;for(let v=0;v<=ymax+1;v+=gstep)out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>';
+    const bw=Math.max(2,(pw-inset)/(y1-y0||1)*0.6);
     if(couponTotal>0)for(let y=y0;y<=y1;y++)out+='<rect x="'+(X(y)-bw/2)+'" y="'+Y(couponTotal)+'" width="'+bw+'" height="'+(ph*couponTotal/ymax)+'" fill="'+TEAL+'" opacity="0.85"/>';
-    mats.forEach(m=>{out+='<rect x="'+(X(m[0])-bw/2)+'" y="'+Y(m[1])+'" width="'+bw+'" height="'+(ph*m[1]/ymax)+'" fill="'+OX+'" stroke="'+PAPER+'" stroke-width="0.75"/><text x="'+X(m[0])+'" y="'+(Y(m[1])-7)+'" text-anchor="middle" font-size="10.5" fill="'+OX+'" class="tnum">'+SGD(m[1])+'</text>';});
     out+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
+    /* maturity bars: full k-value above, the payout YEAR below; leftmost value nudged left so it clears the next bar */
+    let cum=0;mats.forEach((m,mi)=>{cum+=m[1];const bx=X(m[0]);const lx=bx+(mi===0?-7:0);
+      out+='<rect x="'+(bx-bw/2)+'" y="'+Y(m[1])+'" width="'+bw+'" height="'+(ph*m[1]/ymax)+'" fill="'+OX+'" stroke="'+PAPER+'" stroke-width="0.75"/>'
+        +'<text x="'+lx+'" y="'+(Y(m[1])-6)+'" text-anchor="middle" font-size="10" fill="'+OX+'" class="tnum">'+kfmt(m[1])+'</text>'
+        +'<text x="'+bx+'" y="'+(Y(0)+16)+'" text-anchor="middle" font-size="10.5" fill="'+INK+'" class="tnum">'+m[0]+'</text>';});
     if(couponTotal>0)out+='<text x="'+X(y0+Math.min(6,y1-y0))+'" y="'+(Y(couponTotal)-7)+'" font-size="10.5" fill="'+TEAL+'" class="tnum">'+SGD(couponTotal)+' / yr coupons</text>';
+    if(mats.length)out+='<text x="'+(W-R)+'" y="'+(T-2)+'" text-anchor="end" font-size="11" fill="'+INK2+'">Dated maturities total <tspan class="tnum" fill="'+OX+'" font-size="12">'+(cum>=1e6?'S$'+(cum/1e6).toFixed(2)+'m':kfmt(cum))+'</tspan></text>';
     out+='</svg>';return out;
   }
 
@@ -550,7 +558,7 @@ function buildDashboardHTML(d){
     const matRows=maturityData.map(m=>'<tr><td>'+esc(m.planName)+' <span class="sub">'+esc(m.insuredName)+' · '+esc(m.insurer)+'</span></td><td class="num">'+(m.annualPrem?SGD(m.annualPrem):'—')+'</td><td class="num">'+(m.maturityYear||'—')+'</td><td class="num">'+SGD(m.guaranteedVal)+'</td><td class="num tc">'+(m.nonGuaranteedVal||m.totalIllustrated?SGD(m.nonGuaranteedVal||m.totalIllustrated):'<i style="color:#8a6a1f">pending</i>')+'</td></tr>').join('');
     const matTable=maturityData.length?'<div class="caps subcap">Maturity schedule — per plan</div><table><thead><tr><th>Plan · insured</th><th>Yearly premium</th><th>Finishes</th><th>Guaranteed</th><th>Non-guaranteed</th></tr></thead><tbody>'+matRows+'<tr class="total"><td>Total</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.annualPrem||0),0))+'</td><td></td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.guaranteedVal||0),0))+'</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.nonGuaranteedVal||m.totalIllustrated||0),0))+'</td></tr></tbody></table><p class="fn">Guaranteed value is typically S$0 for investment-linked plans by nature — returns depend on fund performance. <b>[ADVISOR: confirm projections]</b></p>':'';
     const payoutChart=renderPayout();
-    const payoutBlock=payoutChart?'<div class="caps subcap">Payout milestone — coupons, then maturity</div><div class="chart">'+payoutChart+'</div><p class="chartcap">Projected coupons accumulate from now, with maturity lump sums on their projected years. Non-guaranteed.</p>':'';
+    const payoutBlock=payoutChart?'<div class="caps subcap">Payout milestone — coupons, then maturity</div><div class="chart">'+payoutChart+'</div><p class="chartcap">Projected coupons accumulate from now, with maturity lump sums on their projected years — the year each plan pays out, and the amount, are printed on its bar. Non-guaranteed.</p>':'';
     const piChart=renderPI();
     const piBlock=piChart?'<div class="caps subcap">Passive income — if coupons are switched on</div><div class="chart">'+piChart+'</div><p class="chartcap">Were the dividends drawn instead of reinvested, monthly passive income would build as each plan’s payout switches on. Non-guaranteed; subject to fund performance.</p>':'';
     wealthSection='<section id="wealth"><div class="page"><span class="snum">06</span><h2>Wealth &amp; payouts</h2>'
@@ -656,7 +664,8 @@ function buildDashboardHTML(d){
 +'.pol .riders{font-size:11.5px;margin-top:8px;color:var(--ink2)}.pol .riders b{font-weight:600;color:var(--ink)}.pol .rem{font-size:11.5px;font-style:italic;color:var(--faint);margin-top:6px;line-height:1.5}\n'
 +'footer{margin-top:70px;padding:26px 0 60px;border-top:1px solid var(--rule)}footer .drule{margin-bottom:18px}footer p{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);text-align:center}\n'
 +'#printbtn{position:fixed;top:12px;right:16px;z-index:60;background:var(--ink);color:var(--paper);border:0;padding:8px 14px;font:600 11px "Archivo";letter-spacing:.1em;text-transform:uppercase;cursor:pointer}\n'
-+'@media print{nav,#printbtn{display:none}body{background:#fff}section{padding:30px 0 0;break-inside:avoid-page}.acc-body{display:block!important}}\n'
++'@page{size:A4 landscape;margin:12mm}\n'
++'@media print{nav,.tip,#printbtn{display:none}body{background:#fff;font-size:12px}.page{max-width:none;padding:0}section{padding:16px 0 0}.mast{padding:0}.mast h1{font-size:46px}h2{font-size:27px}.figs,.mini,.split,table,.chart,.chartcap,.snap,.ncard,.pol,.note,.person,.sched .row,.acc{break-inside:avoid}.chartcap{break-before:avoid}.subcap{break-after:avoid}#cost,#cover,#age,#runway,#wealth,#notes,#register{break-before:page}.acc-body{display:block!important}a[href]{color:inherit;text-decoration:none}}\n'
 +'</style>\n</head>\n<body>\n'
 +'<button id="printbtn" onclick="window.print()">Print / PDF</button>\n'
 +'<header class="mast"><div class="page"><div class="drule"></div>'
