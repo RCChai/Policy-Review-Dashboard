@@ -78,17 +78,21 @@ Chart-specific rules (latest):
   insured carry *different* coverage shapes, render a per-insured `<select>` dropdown that swaps
   the chart; insured sharing an identical shape stay combined in one chart (as the two daughters
   do here). All-different → dropdown; some-identical → group the matches.
-- **Payout (`c-payout`):** coupon bars + the maturity spike only — **no in-chart cumulative
-  line.** Maturity bar always drawn on top of the coupons, distinct colour (rust), thin paper
-  outline. Show cumulative payout as a **table below** the chart in 10-year increments to the
-  last maturity year (By year · Coupons to date · Maturity received · Cumulative payout + total).
+- **Payout (`c-payout`):** **maturity lump sums ONLY — no coupons here** (coupons live in the
+  passive-income chart `c-pi`, so showing them in both is redundant). **Aggregate maturities by
+  payout YEAR**: plans maturing the same year collapse into one totalled bar (never draw
+  overlapping per-plan bars/labels). Rust (`OX`) fill, thin paper outline; the payout YEAR
+  printed under each bar, the totalled k-value above; keep the "Dated maturities total" readout
+  top-right. The per-plan split lives in the **Maturity schedule — per plan** table above the
+  chart, not in the chart. No coupon bars, no cumulative-by-decade table.
 - **Passive income (`c-pi`):** tier labels standardised to the right edge, stacked; stagger
   further right if they would collide.
 
 ## Step 4 — Narrative (data-drafted, advisor-refined)
 The standfirst, each section's italic `.lede`, chart captions and the Notes list are
-editorial prose. Draft them from the data and the flags below, then mark anything bespoke
-`[ADVISOR: confirm]`. Always flag (mirrors policy-summary-report): lapsed policies; premium
+editorial prose. Draft them from the data and the flags below, then mark anything bespoke with
+an **HTML comment** `<!-- ADVISOR: confirm ... -->` (invisible to the client, a reminder in the
+source) — never a visible `<b>[ADVISOR: ...]</b>` tag. Always flag (mirrors policy-summary-report): lapsed policies; premium
 end within 12 months; $0 CI/TPD; minor beneficiary without trustee; Owner-is-Payor=No with
 blank payor; joint-account near/over capacity; premiums > income; missing policy numbers or
 maturity illustrations. Tone: factual, plain English, address client by first name; never
@@ -112,7 +116,7 @@ editorial palette.
 - Layout: `.page` max-width 1020px; sticky wrapping `nav`; numbered sections (`.snum`);
   big-figure rows (`.figs`), structured tables, split bars, snapshot/needs cards, schedule
   columns, mini-figs, numbered notes, and the policy-register bubble accordion.
-- Print-friendly (`@media print` hides nav/buttons, opens accordions). Currency always `S$`.
+- Print-friendly: `@page{size:A4 landscape;margin:12mm}` + `@media print` hides nav/buttons, opens accordions, forces one major section per page, and keeps each chart/card/table/policy whole (`break-inside:avoid`) so nothing splits across pages. Landscape gives charts full width so clients don't squint. Currency always `S$`.
 
 ## Never display — client privacy (hard rule)
 The dashboard is shared with the client and may end up emailed, printed, or stored, so it
@@ -127,4 +131,4 @@ If a section template would surface any of the above, drop the field. The includ
 
 ## Never auto-invent
 Maturity values, NRICs, premium amounts, beneficiary shares, CPF flags — pull from the
-workbook or leave the reference's `pending` / `[ADVISOR: confirm]` markers.
+workbook or leave the reference's `pending` / `<!-- ADVISOR: confirm -->` markers.

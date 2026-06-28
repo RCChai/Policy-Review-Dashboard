@@ -417,12 +417,15 @@ function buildDashboardHTML(d){
   }
 
   function renderPayout(){
-    const couponTotal=payoutPolicies.reduce((s,p)=>s+(p.couponAnnual||0),0);
-    const mats=payoutPolicies.filter(p=>p.maturityValue>0&&p.maturityYear).map(p=>[p.maturityYear,p.maturityValue]);
-    if(!couponTotal&&!mats.length)return '';
-    mats.sort((a,b)=>a[0]-b[0]);
+    /* maturity lump sums ONLY — coupons live in the passive-income timeline, not here */
+    const matsRaw=payoutPolicies.filter(p=>p.maturityValue>0&&p.maturityYear);
+    if(!matsRaw.length)return '';
+    /* aggregate by payout YEAR: plans maturing the same year collapse into one totalled bar
+       (no more overlapping bars/labels) — the per-plan split stays in the schedule table above */
+    const byYear={};matsRaw.forEach(p=>{byYear[p.maturityYear]=(byYear[p.maturityYear]||0)+p.maturityValue;});
+    const mats=Object.keys(byYear).map(y=>[+y,byYear[y]]).sort((a,b)=>a[0]-b[0]);
     const y0=yNow;const y1=Math.max(yNow+5,...mats.map(m=>m[0]));
-    const ymax=niceMax(Math.max(couponTotal,...mats.map(m=>m[1]),1));
+    const ymax=niceMax(Math.max(...mats.map(m=>m[1]),1));
     /* compact "k" label keeps short bars from being blocked; whole values drop the ".0" (72.0 -> 72) */
     const kfmt=n=>{let s=(n/1000).toFixed(1);if(s.slice(-2)==='.0')s=s.slice(0,-2);return 'S$'+s+'k'};
     const W=940,H=300,L=40,R=24,T=30,B=58,inset=30;const pw=W-L-R,ph=H-T-B;
@@ -431,15 +434,13 @@ function buildDashboardHTML(d){
     /* faint gridlines only — value-axis numbers dropped (redundant; every bar is labelled with its own amount) */
     const gstep=ymax/4;for(let v=0;v<=ymax+1;v+=gstep)out+='<line x1="'+L+'" y1="'+Y(v)+'" x2="'+(W-R)+'" y2="'+Y(v)+'" stroke="'+RULE+'"/>';
     const bw=Math.max(2,(pw-inset)/(y1-y0||1)*0.6);
-    if(couponTotal>0)for(let y=y0;y<=y1;y++)out+='<rect x="'+(X(y)-bw/2)+'" y="'+Y(couponTotal)+'" width="'+bw+'" height="'+(ph*couponTotal/ymax)+'" fill="'+TEAL+'" opacity="0.85"/>';
     out+='<line x1="'+L+'" y1="'+Y(0)+'" x2="'+(W-R)+'" y2="'+Y(0)+'" stroke="'+INK+'" stroke-width="1.2"/>';
-    /* maturity bars: full k-value above, the payout YEAR below; leftmost value nudged left so it clears the next bar */
+    /* one bar per payout year: totalled k-value above, the payout YEAR below; leftmost value nudged left so it clears the next bar */
     let cum=0;mats.forEach((m,mi)=>{cum+=m[1];const bx=X(m[0]);const lx=bx+(mi===0?-7:0);
       out+='<rect x="'+(bx-bw/2)+'" y="'+Y(m[1])+'" width="'+bw+'" height="'+(ph*m[1]/ymax)+'" fill="'+OX+'" stroke="'+PAPER+'" stroke-width="0.75"/>'
         +'<text x="'+lx+'" y="'+(Y(m[1])-6)+'" text-anchor="middle" font-size="10" fill="'+OX+'" class="tnum">'+kfmt(m[1])+'</text>'
         +'<text x="'+bx+'" y="'+(Y(0)+16)+'" text-anchor="middle" font-size="10.5" fill="'+INK+'" class="tnum">'+m[0]+'</text>';});
-    if(couponTotal>0)out+='<text x="'+X(y0+Math.min(6,y1-y0))+'" y="'+(Y(couponTotal)-7)+'" font-size="10.5" fill="'+TEAL+'" class="tnum">'+SGD(couponTotal)+' / yr coupons</text>';
-    if(mats.length)out+='<text x="'+(W-R)+'" y="'+(T-2)+'" text-anchor="end" font-size="11" fill="'+INK2+'">Dated maturities total <tspan class="tnum" fill="'+OX+'" font-size="12">'+(cum>=1e6?'S$'+(cum/1e6).toFixed(2)+'m':kfmt(cum))+'</tspan></text>';
+    out+='<text x="'+(W-R)+'" y="'+(T-2)+'" text-anchor="end" font-size="11" fill="'+INK2+'">Dated maturities total <tspan class="tnum" fill="'+OX+'" font-size="12">'+(cum>=1e6?'S$'+(cum/1e6).toFixed(2)+'m':kfmt(cum))+'</tspan></text>';
     out+='</svg>';return out;
   }
 
@@ -556,13 +557,13 @@ function buildDashboardHTML(d){
       +(retMult?'<div class="m"><span class="caps">Return on cash</span><div class="v tc">'+retMult.toFixed(1)+'×</div><div class="s">vs wealth premiums paid</div></div>':'')
       +'</div>';
     const matRows=maturityData.map(m=>'<tr><td>'+esc(m.planName)+' <span class="sub">'+esc(m.insuredName)+' · '+esc(m.insurer)+'</span></td><td class="num">'+(m.annualPrem?SGD(m.annualPrem):'—')+'</td><td class="num">'+(m.maturityYear||'—')+'</td><td class="num">'+SGD(m.guaranteedVal)+'</td><td class="num tc">'+(m.nonGuaranteedVal||m.totalIllustrated?SGD(m.nonGuaranteedVal||m.totalIllustrated):'<i style="color:#8a6a1f">pending</i>')+'</td></tr>').join('');
-    const matTable=maturityData.length?'<div class="caps subcap">Maturity schedule — per plan</div><table><thead><tr><th>Plan · insured</th><th>Yearly premium</th><th>Finishes</th><th>Guaranteed</th><th>Non-guaranteed</th></tr></thead><tbody>'+matRows+'<tr class="total"><td>Total</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.annualPrem||0),0))+'</td><td></td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.guaranteedVal||0),0))+'</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.nonGuaranteedVal||m.totalIllustrated||0),0))+'</td></tr></tbody></table><p class="fn">Guaranteed value is typically S$0 for investment-linked plans by nature — returns depend on fund performance. <b>[ADVISOR: confirm projections]</b></p>':'';
+    const matTable=maturityData.length?'<div class="caps subcap">Maturity schedule — per plan</div><table><thead><tr><th>Plan · insured</th><th>Yearly premium</th><th>Finishes</th><th>Guaranteed</th><th>Non-guaranteed</th></tr></thead><tbody>'+matRows+'<tr class="total"><td>Total</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.annualPrem||0),0))+'</td><td></td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.guaranteedVal||0),0))+'</td><td class="num">'+SGD(maturityData.reduce((s,m)=>s+(m.nonGuaranteedVal||m.totalIllustrated||0),0))+'</td></tr></tbody></table><p class="fn">Guaranteed value is typically S$0 for investment-linked plans by nature — returns depend on fund performance. <!-- ADVISOR: confirm projections --></p>':'';
     const payoutChart=renderPayout();
-    const payoutBlock=payoutChart?'<div class="caps subcap">Payout milestone — coupons, then maturity</div><div class="chart">'+payoutChart+'</div><p class="chartcap">Projected coupons accumulate from now, with maturity lump sums on their projected years — the year each plan pays out, and the amount, are printed on its bar. Non-guaranteed.</p>':'';
+    const payoutBlock=payoutChart?'<div class="caps subcap">Payout milestone — maturity lump sums</div><div class="chart">'+payoutChart+'</div><p class="chartcap">Projected maturity lump sums on the years each plan pays out. Where several plans mature the same year, the bar shows the combined total — the per-plan breakdown is in the schedule above. Coupons are shown separately in the passive-income timeline. Non-guaranteed.</p>':'';
     const piChart=renderPI();
     const piBlock=piChart?'<div class="caps subcap">Passive income — if coupons are switched on</div><div class="chart">'+piChart+'</div><p class="chartcap">Were the dividends drawn instead of reinvested, monthly passive income would build as each plan’s payout switches on. Non-guaranteed; subject to fund performance.</p>':'';
     wealthSection='<section id="wealth"><div class="page"><span class="snum">06</span><h2>Wealth &amp; payouts</h2>'
-      +'<p class="lede">'+num2word(wealthPols.length)+' investment-linked / wealth plans build the family’s future. All figures are non-guaranteed projections. <b>[ADVISOR: refine narrative]</b></p>'
+      +'<p class="lede">'+num2word(wealthPols.length)+' investment-linked / wealth plans build the family’s future. All figures are non-guaranteed projections. <!-- ADVISOR: refine narrative --></p>'
       +mini+matTable+payoutBlock+piBlock+'</div></section>';
   }
 
@@ -677,13 +678,13 @@ function buildDashboardHTML(d){
 +(owner.jointTopup?'<span>Joint top-up <b class="num">'+SGD(owner.jointTopup*12)+'</b> /yr</span>':'')+'</div></div></header>\n'
 +'<nav><div class="page"><a href="#household">The household</a><a href="#cost">Where the money goes</a><a href="#cover">What is covered</a><a href="#age">Cover over time</a><a href="#runway">The premium runway</a>'+(wealthSection?'<a href="#wealth">Wealth &amp; payouts</a>':'')+'<a href="#notes">Notes &amp; actions</a><a href="#register">Policy register</a></div></nav>\n'
 +'<main>\n'
-+'<section id="household"><div class="page"><span class="snum">01</span><h2>The household</h2><p class="lede">'+(kids.length?'One policy owner and '+num2word(kids.length)+' '+(kids.length===1?'child':'children')+'.':'Policy owner household.')+' Every policy in this review is owned by '+esc(owner.name.split(' ')[0])+'. <b>[ADVISOR: refine]</b></p>'+household+jointNote+'</div></section>\n'
-+'<section id="cost"><div class="page"><span class="snum">02</span><h2>Where the money goes</h2><p class="lede">Premiums across the household total <span class="num">'+SGD(totalAnnual)+'</span> a year'+(ownerYearInc&&totalAnnual>ownerYearInc?' — just over '+esc(owner.name.split(' ')[0])+'’s entire income':'')+'. <b>[ADVISOR: refine]</b></p>'+figs+purposeTable+whoPays+'</div></section>\n'
++'<section id="household"><div class="page"><span class="snum">01</span><h2>The household</h2><p class="lede">'+(kids.length?'One policy owner and '+num2word(kids.length)+' '+(kids.length===1?'child':'children')+'.':'Policy owner household.')+' Every policy in this review is owned by '+esc(owner.name.split(' ')[0])+'. <!-- ADVISOR: refine --></p>'+household+jointNote+'</div></section>\n'
++'<section id="cost"><div class="page"><span class="snum">02</span><h2>Where the money goes</h2><p class="lede">Premiums across the household total <span class="num">'+SGD(totalAnnual)+'</span> a year'+(ownerYearInc&&totalAnnual>ownerYearInc?' — just over '+esc(owner.name.split(' ')[0])+'’s entire income':'')+'. <!-- ADVISOR: refine --></p>'+figs+purposeTable+whoPays+'</div></section>\n'
 +'<section id="cover"><div class="page"><span class="snum">03</span><h2>What is covered</h2><p class="lede">Each life insured at a glance, then the needs calculator behind the verdict. Critical illness is read as a whole — early CI is the subset within it.</p><div class="caps subcap" style="margin-top:0">Coverage snapshot — by insured</div><div class="snapgrid">'+snapCards+'</div><div class="caps subcap">Coverage needs calculator — '+esc(owner.name)+'</div>'+needsBlock+'<div class="caps subcap">Benchmark detail</div>'+benchTable+'</div></section>\n'
-+'<section id="age"><div class="page"><span class="snum">04</span><h2>How cover changes with age</h2><p class="lede">Protection is not static. Coverage steps down as term plans complete and multipliers expire — mapped here so the transitions never surprise. <b>[ADVISOR: refine]</b></p>'+ownerChart+kidsChart+'<p class="chartcap">Modelled from each policy’s term-end and multiplier-end ages in the workbook. Critical-illness cover always sits at or above early-CI — early-CI is the subset of it.</p></div></section>\n'
-+'<section id="runway"><div class="page"><span class="snum">05</span><h2>The premium runway</h2><p class="lede">The heavy years are now. Cash premiums fall away in steps as each plan completes. Lifetime cash outlay from here: <span class="num">'+SGD(lifetimeCash)+'</span>. <b>[ADVISOR: refine]</b></p>'+(runwayChart?'<div class="chart">'+runwayChart+'</div><p class="chartcap">Cash premiums by year, per the workbook’s projection. The joint account’s '+SGD(jointCapYr)+' yearly capacity is marked.</p>':'<p class="chartcap">No payment-milestone timeline found in the workbook.</p>')+sched+'</div></section>\n'
++'<section id="age"><div class="page"><span class="snum">04</span><h2>How cover changes with age</h2><p class="lede">Protection is not static. Coverage steps down as term plans complete and multipliers expire — mapped here so the transitions never surprise. <!-- ADVISOR: refine --></p>'+ownerChart+kidsChart+'<p class="chartcap">Modelled from each policy’s term-end and multiplier-end ages in the workbook. Critical-illness cover always sits at or above early-CI — early-CI is the subset of it.</p></div></section>\n'
++'<section id="runway"><div class="page"><span class="snum">05</span><h2>The premium runway</h2><p class="lede">The heavy years are now. Cash premiums fall away in steps as each plan completes. Lifetime cash outlay from here: <span class="num">'+SGD(lifetimeCash)+'</span>. <!-- ADVISOR: refine --></p>'+(runwayChart?'<div class="chart">'+runwayChart+'</div><p class="chartcap">Cash premiums by year, per the workbook’s projection. The joint account’s '+SGD(jointCapYr)+' yearly capacity is marked.</p>':'<p class="chartcap">No payment-milestone timeline found in the workbook.</p>')+sched+'</div></section>\n'
 +wealthSection+'\n'
-+'<section id="notes"><div class="page"><span class="snum">07</span><h2>Notes &amp; actions</h2><p class="lede">Things worth attending to, in rough order of importance. <b>[ADVISOR: review &amp; refine]</b></p>'+notesBlock+'</div></section>\n'
++'<section id="notes"><div class="page"><span class="snum">07</span><h2>Notes &amp; actions</h2><p class="lede">Things worth attending to, in rough order of importance. <!-- ADVISOR: review and refine --></p>'+notesBlock+'</div></section>\n'
 +'<section id="register"><div class="page"><span class="snum">Appendix</span><h2>Policy register</h2><p class="lede">All '+policies.length+' policies, grouped by life insured — tap a name to open. Teal edge = protection · gold edge = wealth accumulation.</p>'+register+'</div></section>\n'
 +'</main>\n'
 +'<footer><div class="page"><div class="drule"></div><p>Prepared '+esc(reportMonth)+' · Strictly confidential — for client review only · All figures in Singapore dollars · Non-guaranteed values are projections</p></div></footer>\n'
