@@ -116,7 +116,7 @@ editorial palette.
 - Layout: `.page` max-width 1020px; sticky wrapping `nav`; numbered sections (`.snum`);
   big-figure rows (`.figs`), structured tables, split bars, snapshot/needs cards, schedule
   columns, mini-figs, numbered notes, and the policy-register bubble accordion.
-- Print-friendly: `@page{size:A4 landscape;margin:12mm}` + `@media print` hides nav/buttons, opens accordions, forces one major section per page, and keeps each chart/card/table/policy whole (`break-inside:avoid`) so nothing splits across pages. Landscape gives charts full width so clients don't squint. Currency always `S$`.
+- Print-friendly: `@page{size:A4 portrait;margin:12mm}` + `@media print` hides nav/buttons, opens accordions, forces one major section per page, reflows the multi-column grids to fit portrait width, and keeps each chart/card/table/policy whole (`break-inside:avoid`) so nothing splits across pages. Portrait suits the single-column editorial layout (reads top-to-bottom) and prints upright; tables/charts are `width:100%` so they scale to the page. Currency always `S$`.
 
 ## Never display — client privacy (hard rule)
 The dashboard is shared with the client and may end up emailed, printed, or stored, so it
